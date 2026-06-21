@@ -1,6 +1,6 @@
 # DEGIRO Investment Dashboard
 
-A local, self-hosted investment dashboard for DEGIRO brokerage accounts. Drop in your exported `Account.csv` and get a live multi-tab view of your portfolio — with real-time prices, dividend tracking, and total return calculations.
+A local, self-hosted investment dashboard for DEGIRO brokerage accounts. Drop in your exported `Account.csv` and get a live multi-tab view of your portfolio — with real-time prices, dividend tracking, and annualised return (XIRR) per asset.
 
 ---
 
@@ -12,11 +12,16 @@ A local, self-hosted investment dashboard for DEGIRO brokerage accounts. Drop in
 | **Purchases** | One clean row per buy trade — units, price, fees, total CHF paid |
 | **Dividends** | Every dividend event converted to CHF using actual DEGIRO FX rates |
 | **Dividend Summary** | Net dividend received per asset (after tax) |
+| **Returns** | XIRR (annualised return %) per asset and for the full portfolio |
 | **Transactions** | Full raw CSV — sortable, filterable, paginated |
 
+**Key capabilities:**
 - Live prices fetched from Yahoo Finance via `yfinance`
-- All foreign currencies (USD, EUR, GBX) converted to CHF
+- All foreign currencies (USD, EUR, GBX/pence) converted to CHF
 - Total Return = Capital Gain + Dividends Received
+- XIRR accounts for exact purchase dates, dividend dates, and current value
+- Totals row pinned at top of every table
+- Full viewport layout — single scrollbar, no nested scroll
 - Prices cached for 5 minutes to avoid hammering Yahoo Finance
 - No database, no cloud — runs entirely on your machine
 
@@ -34,8 +39,9 @@ server.py     ←  local HTTP server (Python)
     │
 dashboard.html ← single-file frontend (HTML + CSS + vanilla JS)
                    • fetches Account.csv via fetch() on every load
-                   • parses and renders all 5 tabs in the browser
+                   • parses and renders all 6 tabs in the browser
                    • calls /prices for live data
+                   • computes XIRR in-browser (Newton-Raphson)
 ```
 
 **Key design principle:** `Account.csv` is a pure data source. To update your dashboard, just download a new CSV from DEGIRO and replace the file — no code changes needed.
@@ -49,8 +55,8 @@ dashboard.html ← single-file frontend (HTML + CSS + vanilla JS)
 | Runtime | Python 3.x |
 | HTTP server | `http.server` + `socketserver` (Python stdlib) |
 | Live prices | [`yfinance`](https://github.com/ranaroussi/yfinance) |
+| XIRR calculation | Vanilla JavaScript (Newton-Raphson algorithm, in-browser) |
 | Frontend | Vanilla HTML + CSS + JavaScript (no frameworks) |
-| Charting | None — pure HTML tables |
 | Data source | DEGIRO `Account.csv` export |
 
 ---
@@ -88,11 +94,46 @@ The dashboard opens automatically in your browser. The server tries ports `8081 
 
 ```
 ├── server.py        # Local HTTP + price API server
-├── dashboard.html   # Full frontend (single file)
+├── dashboard.html   # Full frontend (single file, all 6 tabs)
 ├── start.bat        # Windows launcher
 ├── Account.csv      # Your DEGIRO export (gitignored, never committed)
 └── .gitignore
 ```
+
+---
+
+## Tab Details
+
+### Portfolio
+Shows your current holdings with live prices. Columns:
+- Units held, Total CHF Invested, Dividends Received, Current Price, Current Value CHF
+- **Total Return = Current Value − CHF Invested + Dividends Received**
+
+### Purchases
+One row per buy order (DEGIRO creates 4 CSV rows per trade — this collapses them). Shows:
+- Date, Asset, Units, Original price in trade currency, Rate per unit in CHF, Fee, Total CHF paid
+
+### Dividends
+Every dividend event with CHF conversion using actual DEGIRO FX rates from the CSV. Shows gross dividend, withholding tax, and net received in CHF.
+
+### Dividend Summary
+Total net dividends received per asset after tax, in CHF. Sorted by amount by default.
+
+### Returns (XIRR)
+The key performance tab. For each asset:
+- **First Buy date** — when you first invested
+- **Total Invested CHF** — all money paid including fees, across all purchases
+- **Dividends CHF** — total net dividends received
+- **Current Value CHF** — live market value
+- **Total Return CHF** — capital gain + dividends
+- **Annual Return %** — XIRR with visual bar indicator
+
+The **TOTAL PORTFOLIO** row shows your overall XIRR — the single annualised rate at which your entire portfolio is growing, equivalent to the interest rate on a bank FD that would produce the same result.
+
+> **Note:** Open the Portfolio tab first to load live prices, then open Returns.
+
+### Transactions
+Full raw CSV data — all rows, sortable by any column, filterable per column, paginated 50 rows at a time.
 
 ---
 
@@ -106,7 +147,7 @@ The dashboard opens automatically in your browser. The server tries ports `8081 
 
 **GBX (pence):** automatically divided by 100 before CHF conversion.
 
-**ISIN overrides:** some ISINs (e.g. Alphabet `US02079K3059`) aren't found by Yahoo Search. Add them to `ISIN_OVERRIDES` in `server.py`:
+**ISIN overrides:** some ISINs (e.g. Alphabet `US02079K3059`) are not found by Yahoo Search. Add them to `ISIN_OVERRIDES` in `server.py`:
 ```python
 ISIN_OVERRIDES = {
     'US02079K3059': 'GOOGL',   # Alphabet — Yahoo Search returns []
@@ -123,12 +164,33 @@ DEGIRO creates 4 rows per trade in the CSV:
 |-----|-------------|
 | Buy | `Buy 1 Apple Inc@226.40 USD` — the trade itself |
 | FX Credit | USD credited to account |
-| FX Debit | CHF debited from account ← this is the actual CHF cost |
+| FX Debit | CHF debited from account ← actual CHF cost |
 | Fee | DEGIRO transaction fee in CHF |
 
 The dashboard reads the **FX Debit** row for the true CHF cost. For CHF-denominated stocks (e.g. Novartis), there is no FX row — the Buy row itself carries the CHF amount.
 
 **Total CHF Invested = FX Debit amount + Fee**
+
+> **Note:** DEGIRO uses Swiss number format with `'` (U+2019 curly apostrophe) as thousands separator in descriptions, e.g. `@1'074.2 USD`. The parser handles this automatically.
+
+---
+
+## How XIRR Works
+
+XIRR is the annualised interest rate that makes the net present value of all your cash flows equal to zero. It is the same metric used by professional fund managers.
+
+**Cash flows per asset:**
+- Each purchase → negative (money leaving your pocket), on the actual purchase date
+- Each dividend received → positive, on the actual payment date
+- Current market value → positive, today's date
+
+**Example:**
+- Bought Apple for CHF 202 on 13-Nov-2024
+- Received CHF 1.20 dividend on 15-Feb-2025
+- Apple is worth CHF 285 today
+- XIRR = the annual rate that makes these flows balance = **~38%**
+
+The portfolio-level XIRR combines all assets into one number — equivalent to asking: *"if I had put all this money in a bank FD instead, what interest rate would give me the same result?"*
 
 ---
 
@@ -157,5 +219,6 @@ That's it. No code changes, no imports, no configuration.
 
 - Prices are delayed (Yahoo Finance free tier — typically 15 min delay)
 - `yfinance` may occasionally fail for certain ISINs — add them to `ISIN_OVERRIDES`
-- Sold positions are not yet filtered out of the Portfolio tab
+- Sold positions are not yet filtered out of the Portfolio and Returns tabs
+- XIRR requires Portfolio tab to be opened first (to load live prices)
 - No historical portfolio value chart
