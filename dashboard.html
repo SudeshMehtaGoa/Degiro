@@ -1166,6 +1166,49 @@ function wireControls() {
 //  CHARTS
 // ═══════════════════════════════════════════════════════════
 
+// Shared tooltip element
+function getTooltip() {
+  let t = document.getElementById('_chartTip');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = '_chartTip';
+    t.style.cssText = `position:fixed;pointer-events:none;display:none;
+      background:#0f3460;border:1px solid #e94560;border-radius:6px;
+      padding:8px 14px;font-size:12px;font-family:Segoe UI,Arial;
+      color:#e0e0e0;z-index:999;line-height:1.7;box-shadow:0 4px 16px #0006`;
+    document.body.appendChild(t);
+  }
+  return t;
+}
+
+let _p3Slices = [];
+
+function p3SliceEnter(e, i) {
+  const s   = _p3Slices[i];
+  const tip = getTooltip();
+  tip.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${s.color};margin-right:6px;vertical-align:middle"></span>
+    <strong>${s.r.asset}</strong><br>
+    Value:&nbsp;&nbsp; <strong style="color:#e0e0e0">CHF ${fmtN(s.r.currentVal)}</strong><br>
+    Share:&nbsp;&nbsp; <strong style="color:${s.color}">${(s.pct * 100).toFixed(1)}%</strong>`;
+  tip.style.display = 'block';
+  e.target.setAttribute('stroke', '#fff');
+  e.target.setAttribute('stroke-width', '3');
+  e.target.setAttribute('opacity', '1');
+}
+
+function p3SliceMove(e) {
+  const tip = getTooltip();
+  tip.style.left = (e.clientX + 14) + 'px';
+  tip.style.top  = (e.clientY - 10) + 'px';
+}
+
+function p3SliceLeave(e) {
+  getTooltip().style.display = 'none';
+  e.target.setAttribute('stroke', '#1a1a2e');
+  e.target.setAttribute('stroke-width', '2');
+  e.target.setAttribute('opacity', '0.92');
+}
+
 function renderPortfolioChart() {
   const el = document.getElementById('p3chart');
   if (!el) return;
@@ -1175,10 +1218,9 @@ function renderPortfolioChart() {
   const total  = rows.reduce((s, r) => s + r.currentVal, 0);
   const colors = ['#e94560','#29b6f6','#4caf50','#ff9800','#ce93d8','#ffcc80','#80deea','#a5d6a7','#ef9a9a','#b39ddb','#f48fb1','#ffe082'];
 
-  // Donut slices
   const cx = 110, cy = 110, R = 95, ri = 52;
   let angle = -Math.PI / 2;
-  const slices = rows.map((r, i) => {
+  _p3Slices = rows.map((r, i) => {
     const pct = r.currentVal / total;
     const a1  = angle;
     angle += pct * 2 * Math.PI;
@@ -1191,14 +1233,14 @@ function renderPortfolioChart() {
     return `M ${p(R,a1)} A ${R} ${R} 0 ${large} 1 ${p(R,a2)} L ${p(ri,a2)} A ${ri} ${ri} 0 ${large} 0 ${p(ri,a1)} Z`;
   };
 
-  const paths = slices.map(s =>
-    `<path d="${donutPath(s.a1, s.a2)}" fill="${s.color}" stroke="#1a1a2e" stroke-width="2"/>`
+  const paths = _p3Slices.map((s, i) =>
+    `<path d="${donutPath(s.a1, s.a2)}" fill="${s.color}" stroke="#1a1a2e" stroke-width="2" opacity="0.92" cursor="pointer"
+      onmouseenter="p3SliceEnter(event,${i})" onmousemove="p3SliceMove(event)" onmouseleave="p3SliceLeave(event)"/>`
   ).join('');
 
-  // Legend rows
   const legendH = Math.min(rows.length, 12) * 20;
   const svgH    = Math.max(220, legendH + 20);
-  const legend  = slices.slice(0, 12).map((s, i) => {
+  const legend  = _p3Slices.slice(0, 12).map((s, i) => {
     const y    = 14 + i * 20;
     const name = s.r.asset.length > 22 ? s.r.asset.slice(0, 22) + '…' : s.r.asset;
     const pct  = (s.pct * 100).toFixed(1) + '%';
