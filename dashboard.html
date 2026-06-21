@@ -115,6 +115,7 @@
     <input type="text" id="p6gs" placeholder="Search asset…" style="padding:6px 10px;border-radius:4px;border:1px solid #0f3460;background:#16213e;color:#e0e0e0;width:200px">
     <span id="p6status" style="font-size:12px;color:#888"></span>
   </div>
+  <div id="p6bench" style="margin-bottom:18px"></div>
   <p class="chf-note">* All values are in CHF</p>
   <div class="table-wrap">
     <table id="p6table">
@@ -1413,6 +1414,81 @@ function buildReturns() {
 
   renderReturnsTable();
   wireP6Sort();
+  fetchBenchmarks();
+}
+
+async function fetchBenchmarks() {
+  const el = document.getElementById('p6bench');
+  if (!el || !p6Rows.length) return;
+
+  // Earliest purchase date across all assets
+  const firstDate = p6Rows.reduce((min, r) => {
+    return r.firstDate && (!min || r.firstDate < min) ? r.firstDate : min;
+  }, null);
+  if (!firstDate) return;
+
+  // Portfolio XIRR (already computed — grab from totals row logic)
+  const allCFs = p6Rows.flatMap(r => r.cashflows);
+  let portfolioXirr = null;
+  try {
+    if (allCFs.some(cf => cf.amount < 0) && allCFs.some(cf => cf.amount > 0)) {
+      const sorted = [...allCFs].sort((a, b) => a.date - b.date);
+      const x = xirr(sorted);
+      if (isFinite(x) && x > -1 && x <= 10) portfolioXirr = x;
+    }
+  } catch(e) {}
+
+  const fromStr = firstDate.toISOString().slice(0, 10);
+  el.innerHTML = `<div style="color:#555;font-size:12px;padding:8px 0">Loading benchmark comparison…</div>`;
+
+  try {
+    const res  = await fetch(`/benchmark?from=${fromStr}`);
+    const data = await res.json();
+
+    const pct = n => (n >= 0 ? '+' : '') + (n * 100).toFixed(2) + '%';
+    const portColor = portfolioXirr >= 0 ? '#4caf50' : '#e94560';
+
+    const cards = Object.entries(data).map(([sym, b]) => {
+      if (b.error) return `
+        <div style="background:#16213e;border:1px solid #1e2a45;border-radius:8px;padding:14px 18px;min-width:160px">
+          <div style="color:#888;font-size:11px;margin-bottom:4px">${b.name || sym}</div>
+          <div style="color:#555;font-size:13px">Unavailable</div>
+        </div>`;
+
+      const beating  = portfolioXirr != null && portfolioXirr > b.cagr;
+      const diff     = portfolioXirr != null ? portfolioXirr - b.cagr : null;
+      const bColor   = b.cagr >= 0 ? '#4caf50' : '#e94560';
+      const badge    = diff != null
+        ? `<span style="font-size:11px;padding:2px 7px;border-radius:10px;background:${beating?'#1a4a1a':'#4a1a1a'};color:${beating?'#4caf50':'#e94560'};margin-left:8px">${beating ? '▲ you beat it by ' : '▼ lagging by '}${pct(Math.abs(diff))}</span>`
+        : '';
+
+      return `
+        <div style="background:#16213e;border:1px solid ${beating?'#1a4a1a':'#2a1a1a'};border-radius:8px;padding:14px 18px;min-width:180px">
+          <div style="color:#888;font-size:11px;margin-bottom:4px">${b.name} <span style="color:#444">(${b.startDate})</span></div>
+          <div style="font-size:18px;font-weight:700;color:${bColor}">${pct(b.cagr)}<span style="font-size:11px;color:#555;font-weight:400"> /yr</span></div>
+          ${badge}
+        </div>`;
+    }).join('');
+
+    const portCard = portfolioXirr != null ? `
+      <div style="background:#0f3460;border:2px solid #e94560;border-radius:8px;padding:14px 18px;min-width:180px">
+        <div style="color:#aaa;font-size:11px;margin-bottom:4px">Your Portfolio</div>
+        <div style="font-size:22px;font-weight:700;color:${portColor}">${pct(portfolioXirr)}<span style="font-size:11px;color:#aaa;font-weight:400"> /yr</span></div>
+      </div>` : '';
+
+    el.innerHTML = `
+      <div style="margin-bottom:8px;font-size:12px;color:#556">
+        Benchmark comparison — annualised return since your first purchase (${fromStr}), in each index's local currency
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:stretch">
+        ${portCard}
+        <div style="display:flex;align-items:center;color:#444;font-size:20px;padding:0 4px">vs</div>
+        ${cards}
+      </div>`;
+
+  } catch(e) {
+    el.innerHTML = `<div style="color:#555;font-size:12px">Benchmark data unavailable: ${e.message}</div>`;
+  }
 }
 
 function wireP6Sort() {

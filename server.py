@@ -101,6 +101,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith('/prices'):
             self.handle_prices()
+        elif self.path.startswith('/benchmark'):
+            self.handle_benchmark()
         else:
             super().do_GET()
 
@@ -160,6 +162,56 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 for isin in to_fetch:
                     if isin not in result:
                         result[isin] = {'error': str(e)}
+
+        self._json(result, 200)
+
+    def handle_benchmark(self):
+        if yf is None:
+            self._json({'error': 'yfinance not installed'}, 503)
+            return
+
+        parsed    = urllib.parse.urlparse(self.path)
+        params    = urllib.parse.parse_qs(parsed.query)
+        from_date = params.get('from', [''])[0]   # YYYY-MM-DD
+        if not from_date:
+            self._json({'error': 'missing from= parameter'}, 400)
+            return
+
+        BENCHMARKS = {
+            'SPY'  : 'S&P 500',
+            '^SSMI': 'SMI (Swiss)',
+            'URTH' : 'MSCI World',
+        }
+
+        import datetime
+        result = {}
+        print(f'\n[benchmark] from={from_date}')
+        for symbol, name in BENCHMARKS.items():
+            try:
+                hist = yf.Ticker(symbol).history(start=from_date)
+                if hist.empty:
+                    result[symbol] = {'name': name, 'error': 'no data'}
+                    continue
+                start_price = float(hist['Close'].iloc[0])
+                end_price   = float(hist['Close'].iloc[-1])
+                start_dt    = hist.index[0].to_pydatetime()
+                end_dt      = hist.index[-1].to_pydatetime()
+                years       = max((end_dt - start_dt).days / 365.25, 1/365)
+                cagr        = (end_price / start_price) ** (1 / years) - 1
+                total_ret   = (end_price / start_price) - 1
+                result[symbol] = {
+                    'name'       : name,
+                    'cagr'       : round(cagr, 6),
+                    'totalReturn': round(total_ret, 6),
+                    'startPrice' : round(start_price, 4),
+                    'endPrice'   : round(end_price, 4),
+                    'startDate'  : start_dt.strftime('%Y-%m-%d'),
+                    'endDate'    : end_dt.strftime('%Y-%m-%d'),
+                }
+                print(f'  {symbol}: {start_price:.2f} → {end_price:.2f}  CAGR={cagr*100:.2f}%')
+            except Exception as e:
+                result[symbol] = {'name': name, 'error': str(e)}
+                print(f'  {symbol}: ERROR {e}')
 
         self._json(result, 200)
 

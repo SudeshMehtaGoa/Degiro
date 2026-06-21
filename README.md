@@ -62,6 +62,7 @@ dashboard.html ← single-file frontend (HTML + CSS + vanilla JS)
 | HTTP server | `http.server` + `socketserver` (Python stdlib) |
 | Live prices | [`yfinance`](https://github.com/ranaroussi/yfinance) |
 | XIRR calculation | Vanilla JavaScript (Newton-Raphson algorithm, in-browser) |
+| Benchmark data | `yfinance` historical prices (SPY, ^SSMI, URTH) via `/benchmark` endpoint |
 | Charts | Inline SVG (no charting library — pure code) |
 | Frontend | Vanilla HTML + CSS + JavaScript (no frameworks) |
 | Data source | DEGIRO `Account.csv` export |
@@ -127,7 +128,19 @@ Every dividend event with CHF conversion using actual DEGIRO FX rates from the C
 Total net dividends received per asset after tax, in CHF. Sorted by amount by default.
 
 ### Returns (XIRR)
-The key performance tab. Includes a **horizontal bar chart** below the table — green bars extend right for positive returns, red bars extend left for negative, with a zero centre line. Instantly shows your best and worst performing assets.
+The key performance tab. Includes a **horizontal bar chart** below the table and a **benchmark comparison panel** above it.
+
+**Benchmark comparison panel** — shows your portfolio XIRR vs three major indexes, measured from your first ever purchase date to today:
+
+| Benchmark | Ticker | Currency |
+|-----------|--------|----------|
+| S&P 500 | SPY | USD |
+| SMI (Swiss Market Index) | ^SSMI | CHF |
+| MSCI World | URTH | USD |
+
+Each benchmark card shows the index CAGR and whether you are beating or lagging it, with the gap in percentage points. A green border = you are beating it. Red = lagging.
+
+> Note: benchmarks are shown in their local currency. Currency effects (e.g. USD/CHF movement) are not adjusted.
 
 Column order — most important metric first:
 - **Annual Return %** — XIRR with visual mini-bar (column 3, default sort)
