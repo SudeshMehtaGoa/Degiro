@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEGIRO Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body { display: flex; flex-direction: column; font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #e0e0e0; font-size: 13px; }
+
+    /* ── Tab bar ── */
+    .tab-bar { display: flex; flex-shrink: 0; background: #16213e; border-bottom: 2px solid #0f3460; align-items: center; }
+    .tab { padding: 12px 28px; cursor: pointer; color: #888; border-bottom: 3px solid transparent; transition: all .2s; font-weight: 500; }
+    .tab:hover { color: #fff; background: #0f3460; }
+    .tab.active { color: #e94560; border-bottom-color: #e94560; background: #1a1a2e; }
+    .tab-bar .meta { margin-left: auto; padding-right: 16px; font-size: 11px; color: #555; }
+
+    .tab-content { display: none; flex-direction: column; flex: 1; min-height: 0; padding: 16px; }
+    .tab-content.active { display: flex; }
+
+    /* ── Controls ── */
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; align-items: center; }
+    .controls input[type=text] {
+      padding: 6px 10px; border-radius: 4px; border: 1px solid #0f3460;
+      background: #16213e; color: #e0e0e0; width: 220px;
+    }
+    .controls input[type=text]:focus { outline: none; border-color: #e94560; }
+    .controls label { color: #aaa; font-size: 12px; }
+    .controls select { padding: 6px 8px; border-radius: 4px; border: 1px solid #0f3460; background: #16213e; color: #e0e0e0; }
+    .btn { padding: 6px 14px; border-radius: 4px; border: none; background: #e94560; color: #fff; cursor: pointer; font-size: 12px; }
+    .btn:hover { background: #c73652; }
+    .info { color: #888; font-size: 12px; margin-left: auto; }
+
+    /* ── Table ── */
+    .tab-content h2, .tab-content .sub, .tab-content .controls,
+    .tab-content > div:not(.table-wrap), .tab-content > p { flex-shrink: 0; }
+    .table-wrap { flex: 1; min-height: 0; overflow-x: auto; overflow-y: auto; border-radius: 6px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+
+    thead th {
+      background: #0f3460; color: #e0e0e0; padding: 8px 10px;
+      text-align: left; position: sticky; top: 0; z-index: 2;
+      white-space: nowrap; cursor: pointer; user-select: none;
+    }
+    thead th:hover { background: #1a4a80; }
+    thead th .si { margin-left: 4px; opacity: 0.4; font-size: 10px; }
+    thead th.sa .si::after { content: '▲'; opacity: 1; }
+    thead th.sd .si::after { content: '▼'; opacity: 1; }
+    thead th:not(.sa):not(.sd) .si::after { content: '⇅'; }
+
+    thead tr.fr th { background: #122040; padding: 4px 6px; position: sticky; top: 33px; z-index: 2; }
+    thead tr.fr th input {
+      width: 100%; padding: 3px 6px; border-radius: 3px;
+      border: 1px solid #0f3460; background: #1a1a2e; color: #e0e0e0; font-size: 11px;
+    }
+    thead tr.fr th input:focus { outline: none; border-color: #e94560; }
+
+    tbody tr { border-bottom: 1px solid #1e2a45; }
+    tbody tr:hover { background: #16213e !important; }
+    tbody tr:nth-child(even) { background: #111827; }
+    td { padding: 6px 10px; white-space: nowrap; }
+
+    .pos { color: #4caf50; } .neg { color: #e94560; } .neu { color: #aaa; }
+
+    .badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+    .b-buy  { background: #1a4a1a; color: #4caf50; }
+    .b-sell { background: #4a1a1a; color: #e94560; }
+    .b-div  { background: #1a3a4a; color: #29b6f6; }
+    .b-fee  { background: #3a2a1a; color: #ff9800; }
+    .b-tr   { background: #2a2a3a; color: #9c9cff; }
+    .b-fx   { background: #2a3a2a; color: #a5d6a7; }
+    .b-int  { background: #3a1a3a; color: #ce93d8; }
+    .b-oth  { background: #2a2a2a; color: #aaa;    }
+
+    .pagination { display: flex; gap: 6px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+    .pagination button {
+      padding: 4px 10px; border-radius: 4px; border: 1px solid #0f3460;
+      background: #16213e; color: #e0e0e0; cursor: pointer; font-size: 12px;
+    }
+    .pagination button:hover { background: #0f3460; }
+    .pagination button.active { background: #e94560; border-color: #e94560; color: #fff; }
+    .pagination button:disabled { opacity: 0.4; cursor: default; }
+    .page-info { color: #888; font-size: 12px; margin-top: 8px; }
+
+    h2 { font-size: 16px; color: #e94560; margin-bottom: 4px; }
+    .sub { color: #888; font-size: 12px; margin-bottom: 14px; }
+
+    /* ── Loading / error ── */
+    .loading { padding: 40px; text-align: center; color: #555; font-size: 14px; }
+    .error-box {
+      margin: 20px; padding: 20px; border-radius: 8px;
+      background: #2a1a1a; border: 1px solid #e94560; color: #e94560;
+      font-size: 13px; line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+
+<div class="tab-bar">
+  <div class="tab active" data-tab="t3">Portfolio</div>
+  <div class="tab" data-tab="t2">Purchases</div>
+  <div class="tab" data-tab="t4">Dividends</div>
+  <div class="tab" data-tab="t5">Dividend Summary</div>
+  <div class="tab" data-tab="t1">Transactions</div>
+  <span class="meta" id="fileMeta"></span>
+</div>
+
+<!-- ── Tab 1: Transactions ── -->
+<div id="t1" class="tab-content">
+  <h2>Transaction History</h2>
+  <p class="sub" id="dataSub">Loading Account.csv…</p>
+
+  <div class="controls">
+    <div><label>Search all columns:&nbsp;</label><input type="text" id="gs" placeholder="Type to search…"></div>
+    <div><label>Type:&nbsp;</label>
+      <select id="tf">
+        <option value="">All types</option>
+        <option value="buy">Buy</option>
+        <option value="sell">Sell</option>
+        <option value="dividend">Dividend</option>
+        <option value="fee">Fee</option>
+        <option value="transfer">Transfer</option>
+        <option value="fx">FX</option>
+        <option value="interest">Interest</option>
+        <option value="deposit">Deposit</option>
+      </select>
+    </div>
+    <div><label>Currency:&nbsp;</label>
+      <select id="cf">
+        <option value="">All</option>
+        <option value="CHF">CHF</option>
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+      </select>
+    </div>
+    <div><label>Rows/page:&nbsp;</label>
+      <select id="ps">
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="200">200</option>
+        <option value="9999">All</option>
+      </select>
+    </div>
+    <button class="btn" id="clrBtn">Clear Filters</button>
+    <button class="btn" id="reloadBtn" style="background:#0f3460" title="Re-read Account.csv from disk">&#8635; Reload Data</button>
+    <span class="info" id="rc"></span>
+  </div>
+
+  <div class="table-wrap" id="tableWrap">
+    <div class="loading">Loading data…</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+    <span class="page-info" id="pi"></span>
+    <div class="pagination" id="pg"></div>
+  </div>
+</div>
+
+<!-- ── Tab 2: Purchases ── -->
+<div id="t2" class="tab-content">
+  <h2>Purchases</h2>
+  <p class="sub">One row per buy transaction — grouped by Order ID, amounts converted to CHF</p>
+  <div class="controls">
+    <div><label>Search:&nbsp;</label><input type="text" id="p2gs" placeholder="Asset, ISIN…"></div>
+    <span class="info" id="p2rc"></span>
+  </div>
+  <div class="table-wrap">
+    <table id="p2table">
+      <thead>
+        <tr id="p2hr">
+          <th data-col="0">Date<span class="si"></span></th>
+          <th data-col="1">Asset<span class="si"></span></th>
+          <th data-col="2">ISIN<span class="si"></span></th>
+          <th data-col="3" style="text-align:right">Units<span class="si"></span></th>
+          <th data-col="4" style="text-align:right">Price (orig.ccy)<span class="si"></span></th>
+          <th data-col="5">Orig.Ccy<span class="si"></span></th>
+          <th data-col="6" style="text-align:right">Rate CHF/unit<span class="si"></span></th>
+          <th data-col="7" style="text-align:right">Fee CHF<span class="si"></span></th>
+          <th data-col="8" style="text-align:right">Total CHF<span class="si"></span></th>
+        </tr>
+      </thead>
+      <tbody id="p2body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Tab 3: Portfolio Summary ── -->
+<div id="t3" class="tab-content active">
+  <h2>Portfolio Summary</h2>
+  <p class="sub">Total units held and CHF invested per asset — with live prices</p>
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+    <button class="btn" onclick="buildPortfolio()">&#8635; Refresh Prices</button>
+    <span id="p3status" style="font-size:12px;color:#888"></span>
+  </div>
+  <div class="table-wrap">
+    <table id="p3table">
+      <thead>
+        <tr id="p3hr">
+          <th data-col="0" style="width:40px">No<span class="si"></span></th>
+          <th data-col="1">Asset<span class="si"></span></th>
+          <th data-col="2">ISIN<span class="si"></span></th>
+          <th data-col="3" style="text-align:right">Total Units<span class="si"></span></th>
+          <th data-col="4" style="text-align:right">Total CHF Invested<span class="si"></span></th>
+          <th data-col="5" style="text-align:right">Dividends Received CHF<span class="si"></span></th>
+          <th data-col="6" style="text-align:right">Current Price CHF<span class="si"></span></th>
+          <th data-col="7" style="text-align:right">Current Value CHF<span class="si"></span></th>
+          <th data-col="8" style="text-align:right">Total Return CHF<span class="si"></span></th>
+        </tr>
+      </thead>
+      <tbody id="p3body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Tab 5: Dividend Summary ── -->
+<div id="t5" class="tab-content">
+  <h2>Dividend Summary by Asset</h2>
+  <p class="sub">Total net dividend received per asset (after tax, in CHF)</p>
+  <div class="table-wrap">
+    <table id="p5table">
+      <thead>
+        <tr id="p5hr">
+          <th data-col="0" style="width:50px">No<span class="si"></span></th>
+          <th data-col="1">Asset<span class="si"></span></th>
+          <th data-col="2" style="text-align:right">Total Dividend After Tax (CHF)<span class="si"></span></th>
+        </tr>
+      </thead>
+      <tbody id="p5body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Tab 4: Dividends ── -->
+<div id="t4" class="tab-content">
+  <h2>Dividend History</h2>
+  <p class="sub">All dividends received — amounts converted to CHF using the actual DEGIRO exchange rate</p>
+  <div class="controls">
+    <div><label>Search:&nbsp;</label><input type="text" id="p4gs" placeholder="Asset…"></div>
+    <span class="info" id="p4rc"></span>
+  </div>
+  <div class="table-wrap">
+    <table id="p4table">
+      <thead>
+        <tr id="p4hr">
+          <th data-col="0">Date<span class="si"></span></th>
+          <th data-col="1">Asset<span class="si"></span></th>
+          <th data-col="2">ISIN<span class="si"></span></th>
+          <th data-col="3" style="text-align:right">Dividend CHF<span class="si"></span></th>
+          <th data-col="4" style="text-align:right">Tax CHF<span class="si"></span></th>
+          <th data-col="5" style="text-align:right">Net Received CHF<span class="si"></span></th>
+        </tr>
+      </thead>
+      <tbody id="p4body"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  CONFIG — change only this if the CSV filename ever changes
+// ═══════════════════════════════════════════════════════════
+const CSV_URL = 'Account.csv';
+
+// ── State ────────────────────────────────────────────────
+let allRows = [], filteredRows = [];
+let sortCol = 0, sortAsc = false;
+let page = 1, pageSize = 50;
+
+// ── Boot ────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  wireControls();
+  loadCSV();
+});
+
+// ── Data layer ──────────────────────────────────────────
+function loadCSV() {
+  document.getElementById('tableWrap').innerHTML = '<div class="loading">Reading Account.csv…</div>';
+  document.getElementById('fileMeta').textContent = '';
+
+  // Cache-bust so browser always fetches the latest file from disk
+  fetch(CSV_URL + '?t=' + Date.now())
+    .then(r => {
+      if (!r.ok) throw new Error(`HTTP ${r.status} — could not load ${CSV_URL}`);
+      return r.text();
+    })
+    .then(csv => {
+      allRows = parseCSV(csv);
+      const span = allRows.length ? dateSpan(allRows) : '';
+      document.getElementById('dataSub').textContent =
+        `${allRows.length} transactions loaded from Account.csv${span ? '  ·  ' + span : ''}`;
+      document.getElementById('fileMeta').textContent = `Last loaded: ${new Date().toLocaleTimeString()}`;
+      p2Rows = []; p3Rows = []; p4Rows = []; // reset so all tabs rebuild from fresh data
+      buildTable();
+      applyFilters();
+      buildPortfolio();
+    })
+    .catch(err => {
+      document.getElementById('tableWrap').innerHTML = `
+        <div class="error-box">
+          <strong>Could not load Account.csv</strong><br><br>
+          ${err.message}<br><br>
+          Make sure you started the server:<br>
+          <code>&nbsp;&nbsp;python server.py</code>&nbsp; or double-click <code>start.bat</code><br><br>
+          Then open <code>http://localhost:8080/dashboard.html</code>
+        </div>`;
+      document.getElementById('dataSub').textContent = 'Error loading data.';
+    });
+}
+
+// ── CSV parser ──────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const rows  = [];
+  for (let i = 1; i < lines.length; i++) {
+    const c = splitLine(lines[i]);
+    if (c.length < 11) continue;
+
+    const date    = c[0].trim();   // DD-MM-YYYY
+    const time    = c[1].trim();   // HH:MM
+    const chgAmt  = c[8].trim();
+    const balAmt  = c[10].trim();
+
+    rows.push({
+      dts     : mergeDT(date, time),   // sortable: YYYYMMDDHHHMM
+      dtd     : date + ' ' + time,     // display
+      vdate   : c[2].trim(),
+      product : c[3].trim(),
+      isin    : c[4].trim(),
+      desc    : c[5].trim(),
+      fx      : c[6].trim(),
+      chgCcy  : c[7].trim(),
+      chgAmt,
+      balCcy  : c[9].trim(),
+      balAmt,
+      orderId : (c[11] || '').trim(),
+      dtype   : classify(c[5].trim()),
+      chgN    : parseFloat(chgAmt.replace(/[',]/g, '')) || 0,
+      balN    : parseFloat(balAmt.replace(/[',]/g, '')) || 0,
+    });
+  }
+  return rows;
+}
+
+function splitLine(line) {
+  const r = []; let cur = '', inQ = false;
+  for (const c of line) {
+    if (c === '"') inQ = !inQ;
+    else if (c === ',' && !inQ) { r.push(cur); cur = ''; }
+    else cur += c;
+  }
+  r.push(cur);
+  return r;
+}
+
+// DD-MM-YYYY + HH:MM  →  YYYYMMDDHHHMM  (lexicographically sortable)
+function mergeDT(date, time) {
+  const p = date.split('-');
+  if (p.length !== 3) return '000000000000';
+  const [dd, mm, yyyy] = p;
+  return yyyy + mm + dd + (time.replace(':', '')).padEnd(4, '0');
+}
+
+function classify(d) {
+  if (/^buy /i.test(d))                                  return 'buy';
+  if (/^sell /i.test(d))                                 return 'sell';
+  if (/dividend tax/i.test(d))                           return 'fee';
+  if (/dividend/i.test(d))                               return 'dividend';
+  if (/degiro transaction.*fee|third party fee/i.test(d)) return 'fee';
+  if (/exchange connection fee/i.test(d))                return 'fee';
+  if (/interest/i.test(d))                               return 'interest';
+  if (/^fx credit|^fx debit/i.test(d))                   return 'fx';
+  if (/deposit/i.test(d))                                return 'deposit';
+  if (/transfer|sweep/i.test(d))                         return 'transfer';
+  return 'other';
+}
+
+function dateSpan(rows) {
+  // rows are newest-first after sort; grab first/last display dates
+  const dates = rows.map(r => r.dts).filter(Boolean);
+  if (!dates.length) return '';
+  const sorted = [...dates].sort();
+  const fmt = s => s.slice(6,8) + '-' + s.slice(4,6) + '-' + s.slice(0,4);
+  return fmt(sorted[0]) + ' → ' + fmt(sorted[sorted.length - 1]);
+}
+
+// ── Build table skeleton once ────────────────────────────
+function buildTable() {
+  document.getElementById('tableWrap').innerHTML = `
+    <table id="tx">
+      <thead>
+        <tr id="hr">
+          <th data-col="0">DateTime<span class="si"></span></th>
+          <th data-col="1">Value Date<span class="si"></span></th>
+          <th data-col="2">Product<span class="si"></span></th>
+          <th data-col="3">ISIN<span class="si"></span></th>
+          <th data-col="4">Description<span class="si"></span></th>
+          <th data-col="5">Type<span class="si"></span></th>
+          <th data-col="6">FX<span class="si"></span></th>
+          <th data-col="7">Ccy<span class="si"></span></th>
+          <th data-col="8" style="text-align:right">Change<span class="si"></span></th>
+          <th data-col="9">Bal.Ccy<span class="si"></span></th>
+          <th data-col="10" style="text-align:right">Balance<span class="si"></span></th>
+          <th data-col="11">Order Id<span class="si"></span></th>
+        </tr>
+        <tr class="fr">
+          ${Array(12).fill('<th><input type="text" placeholder="Filter…"></th>').join('')}
+        </tr>
+      </thead>
+      <tbody id="tb"></tbody>
+    </table>`;
+
+  // Sort headers
+  document.querySelectorAll('#hr th').forEach(th => {
+    th.addEventListener('click', () => {
+      const c = +th.dataset.col;
+      if (sortCol === c) sortAsc = !sortAsc;
+      else { sortCol = c; sortAsc = (c !== 0); }
+      document.querySelectorAll('#hr th').forEach(h => h.classList.remove('sa', 'sd'));
+      th.classList.add(sortAsc ? 'sa' : 'sd');
+      sortRows(); page = 1; renderRows();
+    });
+  });
+  // Column filters
+  document.querySelectorAll('.fr input').forEach(inp =>
+    inp.addEventListener('input', applyFilters));
+
+  // Default: DateTime descending (newest first)
+  document.querySelector('#hr th[data-col="0"]').classList.add('sd');
+}
+
+// ── Filter + sort ────────────────────────────────────────
+function cells(r) {
+  return [r.dts, r.vdate, r.product, r.isin, r.desc, r.dtype,
+          r.fx, r.chgCcy, r.chgAmt, r.balCcy, r.balAmt, r.orderId];
+}
+
+function applyFilters() {
+  const gs   = document.getElementById('gs').value.toLowerCase();
+  const tf   = document.getElementById('tf').value;
+  const cf   = document.getElementById('cf').value.toUpperCase();
+  const colF = Array.from(document.querySelectorAll('.fr input')).map(i => i.value.toLowerCase());
+
+  filteredRows = allRows.filter(r => {
+    const c = cells(r);
+    if (gs && !c.some(x => x.toLowerCase().includes(gs))) return false;
+    if (tf && !r.dtype.startsWith(tf))                    return false;
+    if (cf && r.chgCcy !== cf)                            return false;
+    for (let i = 0; i < colF.length; i++)
+      if (colF[i] && !c[i].toLowerCase().includes(colF[i])) return false;
+    return true;
+  });
+
+  sortRows(); page = 1; renderRows();
+}
+
+function sortRows() {
+  const numCols = new Set([8, 10]);
+  filteredRows.sort((a, b) => {
+    const ca = cells(a)[sortCol], cb = cells(b)[sortCol];
+    const cmp = numCols.has(sortCol)
+      ? (parseFloat(ca) || 0) - (parseFloat(cb) || 0)
+      : ca.localeCompare(cb);
+    return sortAsc ? cmp : -cmp;
+  });
+}
+
+// ── Render rows ──────────────────────────────────────────
+function renderRows() {
+  const total = filteredRows.length;
+  const start = (page - 1) * pageSize;
+  const end   = Math.min(start + pageSize, total);
+
+  document.getElementById('tb').innerHTML = filteredRows.slice(start, end).map(r => {
+    const cc = r.chgN > 0 ? 'pos' : r.chgN < 0 ? 'neg' : 'neu';
+    return `<tr>
+      <td>${esc(r.dtd)}</td>
+      <td>${esc(r.vdate)}</td>
+      <td>${esc(r.product)}</td>
+      <td style="font-family:monospace;font-size:11px">${esc(r.isin)}</td>
+      <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis" title="${esc(r.desc)}">${esc(r.desc)}</td>
+      <td>${badge(r.dtype)}</td>
+      <td>${esc(r.fx)}</td>
+      <td>${esc(r.chgCcy)}</td>
+      <td style="text-align:right" class="${cc}">${fmt(r.chgAmt)}</td>
+      <td>${esc(r.balCcy)}</td>
+      <td style="text-align:right">${fmt(r.balAmt)}</td>
+      <td style="font-size:10px;color:#666;max-width:100px;overflow:hidden;text-overflow:ellipsis"
+          title="${esc(r.orderId)}">${esc(r.orderId)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('rc').textContent =
+    total + ' rows' + (total !== allRows.length ? ` (filtered from ${allRows.length})` : '');
+  document.getElementById('pi').textContent =
+    total ? `Showing ${start + 1}–${end} of ${total}` : 'No results';
+
+  renderPagination(total);
+}
+
+// ── Pagination ───────────────────────────────────────────
+function renderPagination(total) {
+  const pages = Math.ceil(total / pageSize);
+  const el    = document.getElementById('pg');
+  if (pages <= 1) { el.innerHTML = ''; return; }
+
+  const btn = (p, label, disabled, active) =>
+    `<button onclick="goP(${p})" ${disabled ? 'disabled' : ''} class="${active ? 'active' : ''}">${label}</button>`;
+
+  let html = btn(page - 1, '&#8249; Prev', page === 1, false);
+  const show = new Set([1, pages, page, page - 1, page + 1].filter(p => p >= 1 && p <= pages));
+  let prev = 0;
+  [...show].sort((a, b) => a - b).forEach(p => {
+    if (prev && p - prev > 1) html += `<span style="color:#555;padding:0 4px">…</span>`;
+    html += btn(p, p, false, p === page);
+    prev = p;
+  });
+  html += btn(page + 1, 'Next &#8250;', page === pages, false);
+  el.innerHTML = html;
+}
+
+function goP(p) {
+  const pages = Math.ceil(filteredRows.length / pageSize);
+  if (p < 1 || p > pages) return;
+  page = p; renderRows();
+}
+
+// ── Helpers ──────────────────────────────────────────────
+function badge(t) {
+  const m = {
+    buy:'b-buy,Buy', sell:'b-sell,Sell', dividend:'b-div,Dividend',
+    fee:'b-fee,Fee', transfer:'b-tr,Transfer', fx:'b-fx,FX',
+    interest:'b-int,Interest', deposit:'b-buy,Deposit', other:'b-oth,Other'
+  };
+  const [cls, lbl] = (m[t] || m.other).split(',');
+  return `<span class="badge ${cls}">${lbl}</span>`;
+}
+
+function fmt(s) {
+  const n = parseFloat((s || '').replace(/[',]/g, ''));
+  if (isNaN(n)) return s || '';
+  return n.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function esc(s) {
+  return (s || '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TAB 2 — Purchases
+// ═══════════════════════════════════════════════════════════
+
+let p2Rows = [], p2Filtered = [], p2SortCol = 0, p2SortAsc = false;
+
+function buildPurchases(rawRows) {
+  // Group all CSV rows by orderId
+  const byOrder = {};
+  for (const r of rawRows) {
+    if (!r.orderId) continue;
+    if (!byOrder[r.orderId]) byOrder[r.orderId] = [];
+    byOrder[r.orderId].push(r);
+  }
+
+  const purchases = [];
+  for (const [orderId, rows] of Object.entries(byOrder)) {
+    // Find the Buy row(s) in this order
+    const buyRows = rows.filter(r => r.dtype === 'buy');
+    if (!buyRows.length) continue;
+
+    // Find CHF debit row(s) — the actual CHF paid via FX conversion (USD/EUR stocks)
+    const chfDebits = rows.filter(r =>
+      r.desc.toLowerCase().includes('fx debit') && r.chgCcy === 'CHF' && r.chgN < 0
+    );
+    // Find fee row
+    const feeRows = rows.filter(r => r.dtype === 'fee' && r.chgCcy === 'CHF');
+
+    // For CHF-denominated stocks (e.g. Novartis) there is no FX Debit row —
+    // the Buy row itself carries the CHF amount directly.
+    let totalChfPaid = chfDebits.reduce((s, r) => s + Math.abs(r.chgN), 0);
+    if (totalChfPaid === 0) {
+      totalChfPaid = buyRows
+        .filter(r => r.chgCcy === 'CHF')
+        .reduce((s, r) => s + Math.abs(r.chgN), 0);
+    }
+    const totalFeeChf  = feeRows.reduce((s, r) => s + Math.abs(r.chgN), 0);
+
+    for (const buy of buyRows) {
+      // Parse "Buy 3 Microsoft Corp@1'077.50 USD" — apostrophe may be U+2019 (Swiss format)
+      const mU = buy.desc.match(/^Buy\s+([\d.,'’]+)\s+/i);
+      const mP = buy.desc.match(/@([\d.,'’]+)\s+(\w+)/i);
+      const stripApos = s => s.replace(/[',’]/g, '');
+      const units     = mU ? parseFloat(stripApos(mU[1])) : null;
+      const priceOrig = mP ? parseFloat(stripApos(mP[1])) : null;
+      const origCcy   = mP ? mP[2] : buy.chgCcy;
+
+      // Rate per unit in CHF — if multiple buy rows share one order, attribute proportionally
+      const fraction  = (buyRows.length > 1 && units && priceOrig)
+        ? (Math.abs(buy.chgN) / buyRows.reduce((s,b)=>s+Math.abs(b.chgN),0))
+        : 1;
+      const chfForThis  = totalChfPaid * fraction;
+      const feeForThis  = totalFeeChf  * fraction;
+      const totalChf    = chfForThis + feeForThis;
+      const ratePerUnit = (units && totalChf) ? totalChf / units : null;
+
+      purchases.push({
+        date        : buy.dtd.split(' ')[0],   // DD-MM-YYYY
+        dateSort    : buy.dts,
+        asset       : buy.product,
+        isin        : buy.isin,
+        units,
+        priceOrig,
+        origCcy,
+        ratePerUnit,
+        feeChf      : feeForThis,
+        totalChf,
+        orderId,
+      });
+    }
+  }
+
+  // Sort newest first by default
+  purchases.sort((a, b) => b.dateSort.localeCompare(a.dateSort));
+  return purchases;
+}
+
+function renderPurchases() {
+  if (!p2Rows.length) {
+    p2Rows = buildPurchases(allRows);
+    p2Filtered = [...p2Rows];
+    wirePurchaseSort();
+    wirePurchaseSearch();
+  }
+  renderP2Table();
+}
+
+function wirePurchaseSort() {
+  document.querySelectorAll('#p2hr th').forEach(th => {
+    th.addEventListener('click', () => {
+      const c = +th.dataset.col;
+      if (p2SortCol === c) p2SortAsc = !p2SortAsc;
+      else { p2SortCol = c; p2SortAsc = (c !== 0); }
+      document.querySelectorAll('#p2hr th').forEach(h => h.classList.remove('sa','sd'));
+      th.classList.add(p2SortAsc ? 'sa' : 'sd');
+      sortP2(); renderP2Table();
+    });
+  });
+  document.querySelector('#p2hr th[data-col="0"]').classList.add('sd');
+}
+
+function wirePurchaseSearch() {
+  document.getElementById('p2gs').addEventListener('input', () => {
+    const q = document.getElementById('p2gs').value.toLowerCase();
+    p2Filtered = q
+      ? p2Rows.filter(r => r.asset.toLowerCase().includes(q) || r.isin.toLowerCase().includes(q))
+      : [...p2Rows];
+    sortP2(); renderP2Table();
+  });
+}
+
+function p2Cells(r) {
+  return [r.dateSort, r.asset, r.isin,
+    String(r.units ?? ''), String(r.priceOrig ?? ''), r.origCcy,
+    String(r.ratePerUnit ?? ''), String(r.feeChf ?? ''), String(r.totalChf ?? '')];
+}
+
+function sortP2() {
+  const numCols = new Set([3,4,6,7,8]);
+  p2Filtered.sort((a, b) => {
+    const ca = p2Cells(a)[p2SortCol], cb = p2Cells(b)[p2SortCol];
+    const cmp = numCols.has(p2SortCol)
+      ? (parseFloat(ca)||0) - (parseFloat(cb)||0)
+      : ca.localeCompare(cb);
+    return p2SortAsc ? cmp : -cmp;
+  });
+}
+
+function renderP2Table() {
+  const totalInvested = p2Filtered.reduce((s,r) => s + (r.totalChf||0), 0);
+  const totalFees     = p2Filtered.reduce((s,r) => s + (r.feeChf  ||0), 0);
+
+  const totRow = `<tr style="background:#0f3460;font-weight:600;border-bottom:2px solid #1a4a80">
+    <td colspan="7" style="padding:8px 10px;color:#aaa">TOTAL (${p2Filtered.length} purchases)</td>
+    <td style="text-align:right;padding:8px 10px;color:#ff9800">${totalFees ? fmtN(totalFees) : ''}</td>
+    <td style="text-align:right;padding:8px 10px;color:#4caf50">CHF ${fmtN(totalInvested)}</td>
+  </tr>`;
+
+  document.getElementById('p2body').innerHTML = totRow + p2Filtered.map(r => `
+    <tr>
+      <td>${esc(r.date)}</td>
+      <td>${esc(r.asset)}</td>
+      <td style="font-family:monospace;font-size:11px">${esc(r.isin)}</td>
+      <td style="text-align:right">${r.units != null ? r.units : '—'}</td>
+      <td style="text-align:right">${r.priceOrig != null ? fmtN(r.priceOrig) : '—'}</td>
+      <td>${esc(r.origCcy)}</td>
+      <td style="text-align:right">${r.ratePerUnit != null ? fmtN(r.ratePerUnit) : '—'}</td>
+      <td style="text-align:right;color:#ff9800">${r.feeChf ? fmtN(r.feeChf) : '—'}</td>
+      <td style="text-align:right;font-weight:600;color:#4caf50">${r.totalChf ? fmtN(r.totalChf) : '—'}</td>
+    </tr>`).join('');
+
+  document.getElementById('p2rc').textContent = `${p2Filtered.length} purchases`;
+}
+
+function fmtN(n) {
+  return n.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TAB 3 — Portfolio Summary
+// ═══════════════════════════════════════════════════════════
+
+let p3Rows = [], p3SortCol = 0, p3SortAsc = true;
+
+function buildPortfolio() {
+  // Use local refs so renderPurchases/renderDividends still do their own full init
+  const purchases = p2Rows.length ? p2Rows : buildPurchases(allRows);
+  const divRows   = p4Rows.length ? p4Rows : buildDividends(allRows);
+
+  // Build dividend map: ISIN → total net CHF received
+  const divMap = {};
+  divRows.forEach(r => {
+    const key = r.isin || r.asset;
+    divMap[key] = (divMap[key] || 0) + (r.netChf || 0);
+  });
+
+  // Group purchases by ISIN → sum units and CHF
+  const map = {};
+  for (const r of purchases) {
+    const key = r.isin || r.asset;
+    if (!map[key]) map[key] = { asset: r.asset, isin: r.isin, units: 0, totalChf: 0 };
+    map[key].units    += r.units    || 0;
+    map[key].totalChf += r.totalChf || 0;
+  }
+
+  // Attach dividend totals to each portfolio row
+  p3Rows = Object.values(map).sort((a, b) => a.asset.localeCompare(b.asset));
+  p3Rows.forEach(r => {
+    r.divReceived = divMap[r.isin] || divMap[r.asset] || 0;
+  });
+
+  wirePo3Sort();
+  renderP3Table();
+  fetchLivePrices();
+}
+
+function wirePo3Sort() {
+  document.querySelectorAll('#p3hr th').forEach(th => {
+    th.addEventListener('click', () => {
+      const c = +th.dataset.col;
+      if (p3SortCol === c) p3SortAsc = !p3SortAsc;
+      else { p3SortCol = c; p3SortAsc = (c !== 4); }
+      document.querySelectorAll('#p3hr th').forEach(h => h.classList.remove('sa','sd'));
+      th.classList.add(p3SortAsc ? 'sa' : 'sd');
+      renderP3Table();
+    });
+  });
+  document.querySelector('#p3hr th[data-col="1"]').classList.add('sa');
+}
+
+function renderP3Table() {
+  const numCols = new Set([3, 4, 5, 6, 7, 8]);
+  const sorted  = [...p3Rows].sort((a, b) => {
+    const va = [null, a.asset, a.isin, a.units, a.totalChf, a.divReceived ?? 0,
+                a.priceChf ?? -Infinity, a.currentVal ?? -Infinity, a.gainLoss ?? -Infinity];
+    const vb = [null, b.asset, b.isin, b.units, b.totalChf, b.divReceived ?? 0,
+                b.priceChf ?? -Infinity, b.currentVal ?? -Infinity, b.gainLoss ?? -Infinity];
+    const cmp = numCols.has(p3SortCol)
+      ? (va[p3SortCol] || 0) - (vb[p3SortCol] || 0)
+      : String(va[p3SortCol]).localeCompare(String(vb[p3SortCol]));
+    return p3SortAsc ? cmp : -cmp;
+  });
+
+  document.getElementById('p3body').innerHTML = sorted.map((r, i) => {
+    const loading  = r.priceStatus === 'loading';
+    const errored  = r.priceStatus === 'error';
+    const divCell     = r.divReceived > 0 ? `<span style="color:#4caf50">CHF ${fmtN(r.divReceived)}</span>` : '—';
+    const priceCell   = loading  ? '<span style="color:#555">fetching…</span>'
+                      : errored  ? '<span style="color:#e94560" title="'+esc(r.priceError||'')+'">N/A</span>'
+                      : r.priceChf != null ? 'CHF ' + fmtN(r.priceChf) : '—';
+    const valCell     = (r.currentVal  != null) ? 'CHF ' + fmtN(r.currentVal)  : (loading ? '…' : '—');
+    const gain        = r.gainLoss;
+    const gainColor   = gain == null ? '' : gain >= 0 ? 'color:#4caf50' : 'color:#e94560';
+    const gainPrefix  = gain != null && gain > 0 ? '+' : '';
+    const gainCell    = gain != null
+      ? `<span style="${gainColor};font-weight:600">${gainPrefix}CHF ${fmtN(gain)}</span>`
+      : (loading ? '…' : '—');
+
+    return `<tr>
+      <td style="color:#555">${i + 1}</td>
+      <td>${esc(r.asset)}</td>
+      <td style="font-family:monospace;font-size:11px">${esc(r.isin)}</td>
+      <td style="text-align:right">${r.units % 1 === 0 ? r.units : fmtN(r.units)}</td>
+      <td style="text-align:right;color:#aaa">CHF ${fmtN(r.totalChf)}</td>
+      <td style="text-align:right">${divCell}</td>
+      <td style="text-align:right">${priceCell}</td>
+      <td style="text-align:right;font-weight:600">${valCell}</td>
+      <td style="text-align:right">${gainCell}</td>
+    </tr>`;
+  }).join('');
+
+  // Totals row — prepended as first tbody row
+  const totInvested = p3Rows.reduce((s, r) => s + (r.totalChf    || 0), 0);
+  const totDiv      = p3Rows.reduce((s, r) => s + (r.divReceived || 0), 0);
+  const totVal      = p3Rows.reduce((s, r) => s + (r.currentVal != null ? r.currentVal : 0), 0);
+  const hasAnyVal   = p3Rows.some(r => r.currentVal != null);
+  const totGain     = totVal + totDiv - p3Rows.reduce((s, r) => s + (r.currentVal != null ? r.totalChf : 0), 0);
+  const gainColor   = totGain >= 0 ? '#4caf50' : '#e94560';
+  const totRow = `<tr style="background:#0f3460;font-weight:600;border-bottom:2px solid #1a4a80">
+    <td colspan="4" style="padding:8px 10px;color:#aaa">TOTAL</td>
+    <td style="text-align:right;padding:8px 10px;color:#aaa">CHF ${fmtN(totInvested)}</td>
+    <td style="text-align:right;padding:8px 10px;color:#4caf50">${totDiv > 0 ? 'CHF ' + fmtN(totDiv) : ''}</td>
+    <td style="padding:8px 10px"></td>
+    <td style="text-align:right;padding:8px 10px">${hasAnyVal ? 'CHF ' + fmtN(totVal) : ''}</td>
+    <td style="text-align:right;padding:8px 10px">${hasAnyVal ? `<span style="color:${gainColor}">${totGain>=0?'+':''}CHF ${fmtN(totGain)}</span>` : ''}</td>
+  </tr>`;
+  document.getElementById('p3body').innerHTML = totRow + document.getElementById('p3body').innerHTML;
+}
+
+async function fetchLivePrices() {
+  const status = document.getElementById('p3status');
+  const isins  = p3Rows.map(r => r.isin).filter(Boolean);
+
+  console.log('[Tab3] fetchLivePrices called. p3Rows:', p3Rows.length, 'ISINs:', isins);
+
+  if (!isins.length) {
+    status.textContent = 'No ISINs found in portfolio data.';
+    console.warn('[Tab3] No ISINs — aborting price fetch.');
+    return;
+  }
+
+  status.textContent = `Fetching live prices for ${isins.length} securities…`;
+  p3Rows.forEach(r => { r.priceStatus = 'loading'; });
+  renderP3Table();
+
+  try {
+    const url = '/prices?isins=' + encodeURIComponent(isins.join(','));
+    console.log('[Tab3] fetching:', url);
+    status.textContent = 'Waiting for server response…';
+
+    const res = await fetch(url);
+    console.log('[Tab3] response status:', res.status);
+    if (!res.ok) throw new Error('Server returned HTTP ' + res.status);
+
+    const data = await res.json();
+    console.log('[Tab3] price data received:', data);
+
+    p3Rows.forEach(r => {
+      const entry = data[r.isin];
+      if (!entry || entry.error) {
+        r.priceStatus = 'error';
+        r.priceError  = entry ? entry.error : 'not in response';
+        r.priceChf = null; r.currentVal = null; r.gainLoss = null;
+      } else {
+        r.priceStatus = 'ok';
+        r.priceChf   = entry.priceChf;
+        r.currentVal = entry.priceChf != null ? entry.priceChf * r.units : null;
+        r.gainLoss   = r.currentVal  != null ? r.currentVal - r.totalChf + (r.divReceived || 0) : null;
+      }
+    });
+
+    const ok  = p3Rows.filter(r => r.priceStatus === 'ok').length;
+    const err = p3Rows.filter(r => r.priceStatus === 'error').length;
+    status.textContent = `Prices updated — ${ok} OK, ${err} unavailable.  Last: ${new Date().toLocaleTimeString()}`;
+
+  } catch (e) {
+    console.error('[Tab3] fetch error:', e);
+    status.style.color = '#e94560';
+    status.textContent = 'Error: ' + e.message;
+    p3Rows.forEach(r => { r.priceStatus = 'error'; r.priceError = e.message; });
+  }
+
+  renderP3Table();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TAB 4 — Dividends
+// ═══════════════════════════════════════════════════════════
+
+let p4Rows = [], p4Filtered = [], p4SortCol = 0, p4SortAsc = false;
+
+function buildDividends(rawRows) {
+  // Step 1 — build FX rate map from actual FX Debit/Credit rows
+  // Rate means: 1 CHF = rate units of foreign currency
+  // So: CHF = foreign_amount / rate
+  const fxMap = {}; // "DD-MM-YYYY|CCY" → rate
+
+  rawRows.forEach(r => {
+    if (!r.fx || !parseFloat(r.fx)) return;
+    const rate    = parseFloat(r.fx);
+    const date    = r.dtd.split(' ')[0];
+    const descLow = r.desc.toLowerCase();
+    // FX Debit in foreign ccy (USD→CHF): rate is on the USD row
+    if (descLow.startsWith('fx debit') && r.chgCcy !== 'CHF')
+      fxMap[date + '|' + r.chgCcy] = rate;
+    // FX Credit in foreign ccy (EUR→CHF): rate is on the EUR row
+    if (descLow.startsWith('fx credit') && r.chgCcy !== 'CHF')
+      fxMap[date + '|' + r.chgCcy] = rate;
+  });
+
+  // Find nearest FX rate within 7 days for a given date + currency
+  function getRate(dateStr, ccy) {
+    if (ccy === 'CHF') return 1.0;
+    const exact = fxMap[dateStr + '|' + ccy];
+    if (exact) return exact;
+    const [dd, mm, yyyy] = dateStr.split('-');
+    const target = new Date(+yyyy, +mm - 1, +dd).getTime();
+    let best = null, bestDiff = 8 * 86400000;
+    for (const [k, rate] of Object.entries(fxMap)) {
+      if (!k.endsWith('|' + ccy)) continue;
+      const [d2, m2, y2] = k.split('|')[0].split('-');
+      const diff = Math.abs(new Date(+y2, +m2 - 1, +d2).getTime() - target);
+      if (diff < bestDiff) { bestDiff = diff; best = rate; }
+    }
+    return best;
+  }
+
+  // Step 2 — group dividend + dividend tax rows by date + ISIN
+  const groups = {};
+  rawRows.forEach(r => {
+    const descLow  = r.desc.toLowerCase();
+    const isDiv    = descLow === 'dividend' ||
+                     (descLow.startsWith('dividend') && !descLow.includes('tax'));
+    const isDivTax = descLow.includes('dividend tax');
+    if (!isDiv && !isDivTax) return;
+    if (!r.product) return;
+
+    const date = r.dtd.split(' ')[0];
+    const key  = date + '|' + (r.isin || r.product);
+    if (!groups[key]) groups[key] = {
+      date, dateSort: r.dts, asset: r.product, isin: r.isin,
+      currency: r.chgCcy, grossOrig: 0, taxOrig: 0
+    };
+    if (isDiv)    groups[key].grossOrig += r.chgN;
+    if (isDivTax) groups[key].taxOrig   += r.chgN; // negative
+  });
+
+  // Step 3 — convert to CHF using actual FX rates
+  return Object.values(groups)
+    .filter(g => g.grossOrig > 0.001)
+    .map(g => {
+      const rate = getRate(g.date, g.currency);
+      const toChf = v => rate != null ? v / rate : null;
+      const grossChf = g.currency === 'CHF' ? g.grossOrig : toChf(g.grossOrig);
+      const taxChf   = g.currency === 'CHF' ? g.taxOrig   : toChf(g.taxOrig);
+      const netChf   = (grossChf != null && taxChf != null) ? grossChf + taxChf : grossChf;
+      return { ...g, grossChf, taxChf, netChf };
+    })
+    .sort((a, b) => b.dateSort.localeCompare(a.dateSort));
+}
+
+function renderDividends() {
+  if (!p4Rows.length) {
+    p4Rows    = buildDividends(allRows);
+    p4Filtered = [...p4Rows];
+    wireP4Sort();
+    document.getElementById('p4gs').addEventListener('input', () => {
+      const q = document.getElementById('p4gs').value.toLowerCase();
+      p4Filtered = q
+        ? p4Rows.filter(r => r.asset.toLowerCase().includes(q) || r.isin.toLowerCase().includes(q))
+        : [...p4Rows];
+      sortP4(); renderP4Table();
+    });
+  }
+  renderP4Table();
+}
+
+function wireP4Sort() {
+  document.querySelectorAll('#p4hr th').forEach(th => {
+    th.addEventListener('click', () => {
+      const c = +th.dataset.col;
+      if (p4SortCol === c) p4SortAsc = !p4SortAsc;
+      else { p4SortCol = c; p4SortAsc = (c <= 1); }
+      document.querySelectorAll('#p4hr th').forEach(h => h.classList.remove('sa', 'sd'));
+      th.classList.add(p4SortAsc ? 'sa' : 'sd');
+      sortP4(); renderP4Table();
+    });
+  });
+  document.querySelector('#p4hr th[data-col="0"]').classList.add('sd');
+}
+
+function p4Cells(r) {
+  return [r.dateSort, r.asset, r.isin,
+    String(r.grossChf ?? ''), String(r.taxChf ?? ''), String(r.netChf ?? '')];
+}
+
+function sortP4() {
+  const numCols = new Set([3, 4, 5]);
+  p4Filtered.sort((a, b) => {
+    const ca = p4Cells(a)[p4SortCol], cb = p4Cells(b)[p4SortCol];
+    const cmp = numCols.has(p4SortCol)
+      ? (parseFloat(ca) || 0) - (parseFloat(cb) || 0)
+      : ca.localeCompare(cb);
+    return p4SortAsc ? cmp : -cmp;
+  });
+}
+
+function renderP4Table() {
+  const totGross = p4Filtered.reduce((s, r) => s + (r.grossChf || 0), 0);
+  const totTax   = p4Filtered.reduce((s, r) => s + (r.taxChf   || 0), 0);
+  const totNet   = p4Filtered.reduce((s, r) => s + (r.netChf   || 0), 0);
+
+  const totRow = `<tr style="background:#0f3460;font-weight:600;border-bottom:2px solid #1a4a80">
+    <td colspan="3" style="padding:8px 10px;color:#aaa">TOTAL</td>
+    <td style="text-align:right;padding:8px 10px;color:#4caf50">CHF ${fmtN(totGross)}</td>
+    <td style="text-align:right;padding:8px 10px;color:#e94560">${totTax ? 'CHF ' + fmtN(totTax) : ''}</td>
+    <td style="text-align:right;padding:8px 10px;color:#4caf50">CHF ${fmtN(totNet)}</td>
+  </tr>`;
+
+  document.getElementById('p4body').innerHTML = totRow + p4Filtered.map(r => `<tr>
+      <td>${esc(r.date)}</td>
+      <td>${esc(r.asset)}</td>
+      <td style="font-family:monospace;font-size:11px">${esc(r.isin)}</td>
+      <td style="text-align:right;color:#4caf50">${r.grossChf != null ? fmtN(r.grossChf) : '—'}</td>
+      <td style="text-align:right;color:#e94560">${r.taxChf ? fmtN(r.taxChf) : '—'}</td>
+      <td style="text-align:right;font-weight:600">${r.netChf != null ? fmtN(r.netChf) : '—'}</td>
+    </tr>`).join('');
+
+  document.getElementById('p4rc').textContent = `${p4Filtered.length} dividend events`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TAB 5 — Dividend Summary by Asset
+// ═══════════════════════════════════════════════════════════
+
+let p5SortCol = 2, p5SortAsc = false;
+
+function renderDivSummary() {
+  if (!p4Rows.length) p4Rows = buildDividends(allRows);
+
+  // Group by asset, sum netChf
+  const map = {};
+  p4Rows.forEach(r => {
+    const key = r.isin || r.asset;
+    if (!map[key]) map[key] = { asset: r.asset, total: 0 };
+    map[key].total += r.netChf || 0;
+  });
+
+  let rows = Object.values(map);
+
+  // Sort
+  rows.sort((a, b) => {
+    const cmp = p5SortCol === 1
+      ? a.asset.localeCompare(b.asset)
+      : a.total - b.total;
+    return p5SortAsc ? cmp : -cmp;
+  });
+
+  const total = rows.reduce((s, r) => s + r.total, 0);
+  const totRow = `<tr style="background:#0f3460;font-weight:600;border-bottom:2px solid #1a4a80">
+    <td colspan="2" style="padding:8px 10px;color:#aaa">TOTAL</td>
+    <td style="text-align:right;padding:8px 10px;color:#4caf50">CHF ${fmtN(total)}</td>
+  </tr>`;
+
+  document.getElementById('p5body').innerHTML = totRow + rows.map((r, i) => `
+    <tr>
+      <td style="color:#555">${i + 1}</td>
+      <td>${esc(r.asset)}</td>
+      <td style="text-align:right;font-weight:600;color:#4caf50">CHF ${fmtN(r.total)}</td>
+    </tr>`).join('');
+
+  // Wire sort headers once
+  document.querySelectorAll('#p5hr th').forEach(th => {
+    th.onclick = () => {
+      const c = +th.dataset.col;
+      if (p5SortCol === c) p5SortAsc = !p5SortAsc;
+      else { p5SortCol = c; p5SortAsc = (c === 1); }
+      document.querySelectorAll('#p5hr th').forEach(h => h.classList.remove('sa','sd'));
+      th.classList.add(p5SortAsc ? 'sa' : 'sd');
+      renderDivSummary();
+    };
+  });
+  document.querySelector(`#p5hr th[data-col="${p5SortCol}"]`).classList.add(p5SortAsc ? 'sa' : 'sd');
+}
+
+// ── Wire static controls ─────────────────────────────────
+function wireControls() {
+  document.getElementById('gs').addEventListener('input', applyFilters);
+  document.getElementById('tf').addEventListener('change', applyFilters);
+  document.getElementById('cf').addEventListener('change', applyFilters);
+  document.getElementById('ps').addEventListener('change', () => {
+    pageSize = +document.getElementById('ps').value;
+    page = 1; renderRows();
+  });
+  document.getElementById('clrBtn').addEventListener('click', () => {
+    document.getElementById('gs').value = '';
+    document.getElementById('tf').value = '';
+    document.getElementById('cf').value = '';
+    document.querySelectorAll('.fr input').forEach(i => i.value = '');
+    applyFilters();
+  });
+  document.getElementById('reloadBtn').addEventListener('click', () => {
+    page = 1; loadCSV();
+  });
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab).classList.add('active');
+    if (t.dataset.tab === 't2' && allRows.length) renderPurchases();
+    if (t.dataset.tab === 't3' && allRows.length) buildPortfolio();
+    if (t.dataset.tab === 't4' && allRows.length) renderDividends();
+    if (t.dataset.tab === 't5' && allRows.length) renderDivSummary();
+  }));
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+Account.csv
+*.png
+*.PNG
+*.jpg
+*.jpeg
+*.pyc
+__pycache__/
