@@ -20,8 +20,11 @@ A local, self-hosted investment dashboard for DEGIRO brokerage accounts. Drop in
 - All foreign currencies (USD, EUR, GBX/pence) converted to CHF
 - Total Return = Capital Gain + Dividends Received
 - XIRR accounts for exact purchase dates, dividend dates, and current value
+- **Donut chart** on Portfolio tab — visual allocation by current value
+- **Horizontal bar chart** on Returns tab — XIRR per asset at a glance
 - Totals row pinned at top of every table
 - Full viewport layout — single scrollbar, no nested scroll
+- Column headers clean (no CHF clutter) — note above each table clarifies currency
 - Prices cached for 5 minutes to avoid hammering Yahoo Finance
 - No database, no cloud — runs entirely on your machine
 
@@ -56,6 +59,7 @@ dashboard.html ← single-file frontend (HTML + CSS + vanilla JS)
 | HTTP server | `http.server` + `socketserver` (Python stdlib) |
 | Live prices | [`yfinance`](https://github.com/ranaroussi/yfinance) |
 | XIRR calculation | Vanilla JavaScript (Newton-Raphson algorithm, in-browser) |
+| Charts | Inline SVG (no charting library — pure code) |
 | Frontend | Vanilla HTML + CSS + JavaScript (no frameworks) |
 | Data source | DEGIRO `Account.csv` export |
 
@@ -105,8 +109,8 @@ The dashboard opens automatically in your browser. The server tries ports `8081 
 ## Tab Details
 
 ### Portfolio
-Shows your current holdings with live prices. Columns:
-- Units held, Total CHF Invested, Dividends Received, Current Price, Current Value CHF
+Shows your current holdings with live prices. Includes a **donut chart** above the table showing allocation by current market value — each slice is one asset, with % and CHF value in the legend. Columns:
+- Units held, Total Invested, Dividends Received, Current Price, Current Value, Total Return
 - **Total Return = Current Value − CHF Invested + Dividends Received**
 
 ### Purchases
@@ -120,13 +124,15 @@ Every dividend event with CHF conversion using actual DEGIRO FX rates from the C
 Total net dividends received per asset after tax, in CHF. Sorted by amount by default.
 
 ### Returns (XIRR)
-The key performance tab. For each asset:
+The key performance tab. Includes a **horizontal bar chart** above the table — green bars extend right for positive returns, red bars extend left for negative, with a zero centre line. Instantly shows your best and worst performing assets.
+
+For each asset in the table:
 - **First Buy date** — when you first invested
-- **Total Invested CHF** — all money paid including fees, across all purchases
-- **Dividends CHF** — total net dividends received
-- **Current Value CHF** — live market value
-- **Total Return CHF** — capital gain + dividends
-- **Annual Return %** — XIRR with visual bar indicator
+- **Total Invested** — all money paid including fees, across all purchases
+- **Dividends** — total net dividends received
+- **Current Value** — live market value
+- **Total Return** — capital gain + dividends
+- **Annual Return %** — XIRR with visual mini-bar indicator
 
 The **TOTAL PORTFOLIO** row shows your overall XIRR — the single annualised rate at which your entire portfolio is growing, equivalent to the interest rate on a bank FD that would produce the same result.
 
