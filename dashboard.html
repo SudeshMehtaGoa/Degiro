@@ -122,14 +122,14 @@
         <tr id="p6hr">
           <th data-col="0" style="width:40px">No<span class="si"></span></th>
           <th data-col="1">Asset<span class="si"></span></th>
-          <th data-col="2">ISIN<span class="si"></span></th>
-          <th data-col="3">First Buy<span class="si"></span></th>
-          <th data-col="4" style="text-align:right">Units<span class="si"></span></th>
-          <th data-col="5" style="text-align:right">Total Invested<span class="si"></span></th>
-          <th data-col="6" style="text-align:right">Dividends<span class="si"></span></th>
-          <th data-col="7" style="text-align:right">Current Value<span class="si"></span></th>
-          <th data-col="8" style="text-align:right">Total Return<span class="si"></span></th>
-          <th data-col="9" style="text-align:right">Annual Return %<span class="si"></span></th>
+          <th data-col="2" style="text-align:right">Annual Return %<span class="si"></span></th>
+          <th data-col="3">ISIN<span class="si"></span></th>
+          <th data-col="4">First Buy<span class="si"></span></th>
+          <th data-col="5" style="text-align:right">Units<span class="si"></span></th>
+          <th data-col="6" style="text-align:right">Total Invested<span class="si"></span></th>
+          <th data-col="7" style="text-align:right">Dividends<span class="si"></span></th>
+          <th data-col="8" style="text-align:right">Current Value<span class="si"></span></th>
+          <th data-col="9" style="text-align:right">Total Return<span class="si"></span></th>
         </tr>
       </thead>
       <tbody id="p6body"></tbody>
@@ -1331,7 +1331,7 @@ function xirr(cashflows, guess = 0.1) {
   return rate;
 }
 
-let p6Rows = [], p6SortCol = 9, p6SortAsc = false;
+let p6Rows = [], p6SortCol = 2, p6SortAsc = false;
 
 function buildReturns() {
   const status = document.getElementById('p6status');
@@ -1439,12 +1439,12 @@ function renderReturnsTable() {
     document.getElementById('p6gs')._wired = true;
   }
 
-  const numCols = new Set([4, 5, 6, 7, 8, 9]);
+  const numCols = new Set([2, 5, 6, 7, 8, 9]);
   const sorted  = [...p6Filtered].sort((a, b) => {
-    const va = [null, a.asset, a.isin, a.firstDate?.getTime() ?? 0, a.units, a.totalChf,
-                a.divReceived, a.currentVal ?? -Infinity, (a.currentVal??0)+a.divReceived-a.totalChf, a.xirrVal ?? -Infinity];
-    const vb = [null, b.asset, b.isin, b.firstDate?.getTime() ?? 0, b.units, b.totalChf,
-                b.divReceived, b.currentVal ?? -Infinity, (b.currentVal??0)+b.divReceived-b.totalChf, b.xirrVal ?? -Infinity];
+    const va = [null, a.asset, a.xirrVal ?? -Infinity, a.isin, a.firstDate?.getTime() ?? 0, a.units, a.totalChf,
+                a.divReceived, a.currentVal ?? -Infinity, (a.currentVal??0)+a.divReceived-a.totalChf];
+    const vb = [null, b.asset, b.xirrVal ?? -Infinity, b.isin, b.firstDate?.getTime() ?? 0, b.units, b.totalChf,
+                b.divReceived, b.currentVal ?? -Infinity, (b.currentVal??0)+b.divReceived-b.totalChf];
     const cmp = numCols.has(p6SortCol)
       ? (va[p6SortCol] || 0) - (vb[p6SortCol] || 0)
       : String(va[p6SortCol]).localeCompare(String(vb[p6SortCol]));
@@ -1474,14 +1474,15 @@ function renderReturnsTable() {
     : '—';
 
   const totRow = `<tr style="background:#0f3460;font-weight:600;border-bottom:2px solid #1a4a80">
-    <td colspan="3" style="padding:8px 10px;color:#aaa">TOTAL PORTFOLIO</td>
+    <td colspan="2" style="padding:8px 10px;color:#aaa">TOTAL PORTFOLIO</td>
+    <td style="text-align:right;padding:8px 10px">${xirrTotCell}</td>
+    <td style="padding:8px 10px"></td>
     <td style="padding:8px 10px"></td>
     <td style="padding:8px 10px"></td>
     <td style="text-align:right;padding:8px 10px;color:#aaa">CHF ${fmtN(totInvested)}</td>
     <td style="text-align:right;padding:8px 10px;color:#4caf50">${totDiv > 0 ? 'CHF ' + fmtN(totDiv) : ''}</td>
     <td style="text-align:right;padding:8px 10px">CHF ${fmtN(totVal)}</td>
     <td style="text-align:right;padding:8px 10px"><span style="color:${totColor}">${totReturn>=0?'+':''}CHF ${fmtN(totReturn)}</span></td>
-    <td style="text-align:right;padding:8px 10px">${xirrTotCell}</td>
   </tr>`;
 
   const rows = sorted.map((r, i) => {
@@ -1509,6 +1510,7 @@ function renderReturnsTable() {
     return `<tr>
       <td style="color:#555">${i + 1}</td>
       <td>${esc(r.asset)}</td>
+      <td style="text-align:right">${xirrCell}</td>
       <td style="font-family:monospace;font-size:11px">${esc(r.isin)}</td>
       <td>${fmtDate(r.firstDate)}</td>
       <td style="text-align:right">${r.units % 1 === 0 ? r.units : fmtN(r.units)}</td>
@@ -1516,7 +1518,6 @@ function renderReturnsTable() {
       <td style="text-align:right;color:#4caf50">${r.divReceived > 0 ? 'CHF ' + fmtN(r.divReceived) : '—'}</td>
       <td style="text-align:right;font-weight:600">${hasVal ? 'CHF ' + fmtN(r.currentVal) : '—'}</td>
       <td style="text-align:right">${hasVal ? `<span style="color:${retColor}">${totalReturn>=0?'+':''}CHF ${fmtN(totalReturn)}</span>` : '—'}</td>
-      <td style="text-align:right">${xirrCell}</td>
     </tr>`;
   }).join('');
 
