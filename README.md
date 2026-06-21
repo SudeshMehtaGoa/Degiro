@@ -20,8 +20,8 @@ A local, self-hosted investment dashboard for DEGIRO brokerage accounts. Drop in
 - All foreign currencies (USD, EUR, GBX/pence) converted to CHF
 - Total Return = Capital Gain + Dividends Received
 - XIRR accounts for exact purchase dates, dividend dates, and current value
-- **Donut chart** on Portfolio tab — visual allocation by current value
-- **Horizontal bar chart** on Returns tab — XIRR per asset at a glance
+- **Donut chart** on Portfolio tab — visual allocation by current value, with mouseover tooltip (asset name, CHF value, % share)
+- **Horizontal bar chart** on Returns tab — XIRR per asset at a glance, green = positive, red = negative
 - Totals row pinned at top of every table
 - Natural page scroll on all tabs — full table always visible, no cramped scroll boxes
 - Tab bar stays sticky at top while scrolling
@@ -127,15 +127,17 @@ Every dividend event with CHF conversion using actual DEGIRO FX rates from the C
 Total net dividends received per asset after tax, in CHF. Sorted by amount by default.
 
 ### Returns (XIRR)
-The key performance tab. Includes a **horizontal bar chart** above the table — green bars extend right for positive returns, red bars extend left for negative, with a zero centre line. Instantly shows your best and worst performing assets.
+The key performance tab. Includes a **horizontal bar chart** below the table — green bars extend right for positive returns, red bars extend left for negative, with a zero centre line. Instantly shows your best and worst performing assets.
 
-For each asset in the table:
+Column order — most important metric first:
+- **Annual Return %** — XIRR with visual mini-bar (column 3, default sort)
+- **ISIN** — security identifier
 - **First Buy date** — when you first invested
+- **Units** — total units held
 - **Total Invested** — all money paid including fees, across all purchases
 - **Dividends** — total net dividends received
 - **Current Value** — live market value
 - **Total Return** — capital gain + dividends
-- **Annual Return %** — XIRR with visual mini-bar indicator
 
 The **TOTAL PORTFOLIO** row shows your overall XIRR — the single annualised rate at which your entire portfolio is growing, equivalent to the interest rate on a bank FD that would produce the same result.
 
