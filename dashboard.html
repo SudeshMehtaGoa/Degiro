@@ -6,18 +6,17 @@
   <title>DEGIRO Dashboard</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; }
-    body { display: flex; flex-direction: column; font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #e0e0e0; font-size: 13px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #e0e0e0; font-size: 13px; }
 
     /* ── Tab bar ── */
-    .tab-bar { display: flex; flex-shrink: 0; background: #16213e; border-bottom: 2px solid #0f3460; align-items: center; }
+    .tab-bar { display: flex; position: sticky; top: 0; z-index: 10; background: #16213e; border-bottom: 2px solid #0f3460; align-items: center; }
     .tab { padding: 12px 28px; cursor: pointer; color: #888; border-bottom: 3px solid transparent; transition: all .2s; font-weight: 500; }
     .tab:hover { color: #fff; background: #0f3460; }
     .tab.active { color: #e94560; border-bottom-color: #e94560; background: #1a1a2e; }
     .tab-bar .meta { margin-left: auto; padding-right: 16px; font-size: 11px; color: #555; }
 
-    .tab-content { display: none; flex-direction: column; flex: 1; min-height: 0; padding: 16px; }
-    .tab-content.active { display: flex; }
+    .tab-content { display: none; padding: 16px; }
+    .tab-content.active { display: block; }
 
     /* ── Controls ── */
     .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; align-items: center; }
@@ -33,9 +32,8 @@
     .info { color: #888; font-size: 12px; margin-left: auto; }
 
     /* ── Table ── */
-    .tab-content h2, .tab-content .sub, .tab-content .controls,
-    .tab-content > div:not(.table-wrap), .tab-content > p { flex-shrink: 0; }
-    .table-wrap { flex: 1; min-height: 0; overflow-x: auto; overflow-y: auto; border-radius: 6px; }
+    .table-wrap { overflow-x: auto; border-radius: 6px; }
+    #t1 .table-wrap { max-height: 65vh; overflow-y: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 12px; }
 
     thead th {
@@ -114,9 +112,10 @@
   <p class="sub">Annualised return per asset — accounts for purchase dates, dividend income, and current market value</p>
   <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
     <button class="btn" onclick="buildReturns()">&#8635; Refresh</button>
+    <input type="text" id="p6gs" placeholder="Search asset…" style="padding:6px 10px;border-radius:4px;border:1px solid #0f3460;background:#16213e;color:#e0e0e0;width:200px">
     <span id="p6status" style="font-size:12px;color:#888"></span>
   </div>
-  <div id="p6chart" style="flex-shrink:0;margin-bottom:12px"></div>
+  <div id="p6chart" style="margin-bottom:12px"></div>
   <p class="chf-note">* All values are in CHF</p>
   <div class="table-wrap">
     <table id="p6table">
@@ -225,9 +224,10 @@
   <p class="sub">Total units held and CHF invested per asset — with live prices</p>
   <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
     <button class="btn" onclick="buildPortfolio()">&#8635; Refresh Prices</button>
+    <input type="text" id="p3gs" placeholder="Search asset…" style="padding:6px 10px;border-radius:4px;border:1px solid #0f3460;background:#16213e;color:#e0e0e0;width:200px">
     <span id="p3status" style="font-size:12px;color:#888"></span>
   </div>
-  <div id="p3chart" style="flex-shrink:0;margin-bottom:12px"></div>
+  <div id="p3chart" style="margin-bottom:12px"></div>
   <p class="chf-note">* All values are in CHF</p>
   <div class="table-wrap">
     <table id="p3table">
@@ -253,6 +253,9 @@
 <div id="t5" class="tab-content">
   <h2>Dividend Summary by Asset</h2>
   <p class="sub">Total net dividend received per asset (after tax, in CHF)</p>
+  <div style="margin-bottom:12px">
+    <input type="text" id="p5gs" placeholder="Search asset…" style="padding:6px 10px;border-radius:4px;border:1px solid #0f3460;background:#16213e;color:#e0e0e0;width:200px">
+  </div>
   <p class="chf-note">* All values are in CHF</p>
   <div class="table-wrap">
     <table id="p5table">
@@ -748,7 +751,7 @@ function fmtN(n) {
 //  TAB 3 — Portfolio Summary
 // ═══════════════════════════════════════════════════════════
 
-let p3Rows = [], p3SortCol = 0, p3SortAsc = true;
+let p3Rows = [], p3Filtered = [], p3SortCol = 0, p3SortAsc = true;
 
 function buildPortfolio() {
   // Use local refs so renderPurchases/renderDividends still do their own full init
@@ -776,6 +779,13 @@ function buildPortfolio() {
   p3Rows.forEach(r => {
     r.divReceived = divMap[r.isin] || divMap[r.asset] || 0;
   });
+  p3Filtered = [...p3Rows];
+
+  document.getElementById('p3gs').oninput = () => {
+    const q = document.getElementById('p3gs').value.toLowerCase();
+    p3Filtered = q ? p3Rows.filter(r => r.asset.toLowerCase().includes(q) || r.isin.toLowerCase().includes(q)) : [...p3Rows];
+    renderP3Table();
+  };
 
   wirePo3Sort();
   renderP3Table();
@@ -798,7 +808,7 @@ function wirePo3Sort() {
 
 function renderP3Table() {
   const numCols = new Set([3, 4, 5, 6, 7, 8]);
-  const sorted  = [...p3Rows].sort((a, b) => {
+  const sorted  = [...p3Filtered].sort((a, b) => {
     const va = [null, a.asset, a.isin, a.units, a.totalChf, a.divReceived ?? 0,
                 a.priceChf ?? -Infinity, a.currentVal ?? -Infinity, a.gainLoss ?? -Infinity];
     const vb = [null, b.asset, b.isin, b.units, b.totalChf, b.divReceived ?? 0,
@@ -884,6 +894,10 @@ async function fetchLivePrices() {
     const data = await res.json();
     console.log('[Tab3] price data received:', data);
 
+    p3Filtered = p3Rows.filter(r => {
+      const q = (document.getElementById('p3gs')?.value || '').toLowerCase();
+      return !q || r.asset.toLowerCase().includes(q) || r.isin.toLowerCase().includes(q);
+    });
     p3Rows.forEach(r => {
       const entry = data[r.isin];
       if (!entry || entry.error) {
@@ -1075,7 +1089,11 @@ function renderDivSummary() {
     map[key].total += r.netChf || 0;
   });
 
-  let rows = Object.values(map);
+  const q5 = (document.getElementById('p5gs')?.value || '').toLowerCase();
+  let rows = Object.values(map).filter(r => !q5 || r.asset.toLowerCase().includes(q5));
+
+  // Wire search once
+  document.getElementById('p5gs').oninput = () => renderDivSummary();
 
   // Sort
   rows.sort((a, b) => {
@@ -1370,8 +1388,17 @@ function wireP6Sort() {
 }
 
 function renderReturnsTable() {
+  const q6 = (document.getElementById('p6gs')?.value || '').toLowerCase();
+  const p6Filtered = q6 ? p6Rows.filter(r => r.asset.toLowerCase().includes(q6) || r.isin.toLowerCase().includes(q6)) : p6Rows;
+
+  // Wire search once
+  if (!document.getElementById('p6gs')._wired) {
+    document.getElementById('p6gs').oninput = () => renderReturnsTable();
+    document.getElementById('p6gs')._wired = true;
+  }
+
   const numCols = new Set([4, 5, 6, 7, 8, 9]);
-  const sorted  = [...p6Rows].sort((a, b) => {
+  const sorted  = [...p6Filtered].sort((a, b) => {
     const va = [null, a.asset, a.isin, a.firstDate?.getTime() ?? 0, a.units, a.totalChf,
                 a.divReceived, a.currentVal ?? -Infinity, (a.currentVal??0)+a.divReceived-a.totalChf, a.xirrVal ?? -Infinity];
     const vb = [null, b.asset, b.isin, b.firstDate?.getTime() ?? 0, b.units, b.totalChf,
