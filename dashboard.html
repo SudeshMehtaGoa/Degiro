@@ -102,8 +102,38 @@
   <div class="tab" data-tab="t2">Purchases</div>
   <div class="tab" data-tab="t4">Dividends</div>
   <div class="tab" data-tab="t5">Dividend Summary</div>
+  <div class="tab" data-tab="t6">Returns</div>
   <div class="tab" data-tab="t1">Transactions</div>
   <span class="meta" id="fileMeta"></span>
+</div>
+
+<!-- ── Tab 6: Returns (XIRR) ── -->
+<div id="t6" class="tab-content">
+  <h2>Annual Returns (XIRR)</h2>
+  <p class="sub">Annualised return per asset — accounts for purchase dates, dividend income, and current market value</p>
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+    <button class="btn" onclick="buildReturns()">&#8635; Refresh</button>
+    <span id="p6status" style="font-size:12px;color:#888"></span>
+  </div>
+  <div class="table-wrap">
+    <table id="p6table">
+      <thead>
+        <tr id="p6hr">
+          <th data-col="0" style="width:40px">No<span class="si"></span></th>
+          <th data-col="1">Asset<span class="si"></span></th>
+          <th data-col="2">ISIN<span class="si"></span></th>
+          <th data-col="3">First Buy<span class="si"></span></th>
+          <th data-col="4" style="text-align:right">Units<span class="si"></span></th>
+          <th data-col="5" style="text-align:right">Total Invested CHF<span class="si"></span></th>
+          <th data-col="6" style="text-align:right">Dividends CHF<span class="si"></span></th>
+          <th data-col="7" style="text-align:right">Current Value CHF<span class="si"></span></th>
+          <th data-col="8" style="text-align:right">Total Return CHF<span class="si"></span></th>
+          <th data-col="9" style="text-align:right">Annual Return %<span class="si"></span></th>
+        </tr>
+      </thead>
+      <tbody id="p6body"></tbody>
+    </table>
+  </div>
 </div>
 
 <!-- ── Tab 1: Transactions ── -->
@@ -1100,7 +1130,229 @@ function wireControls() {
     if (t.dataset.tab === 't3' && allRows.length) buildPortfolio();
     if (t.dataset.tab === 't4' && allRows.length) renderDividends();
     if (t.dataset.tab === 't5' && allRows.length) renderDivSummary();
+    if (t.dataset.tab === 't6' && allRows.length) buildReturns();
   }));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TAB 6 — Annual Returns (XIRR)
+// ═══════════════════════════════════════════════════════════
+
+// Parse DD-MM-YYYY → Date
+function parseDMY(s) {
+  if (!s) return null;
+  const [d, m, y] = s.split('-');
+  return new Date(+y, +m - 1, +d);
+}
+
+// XIRR: Newton-Raphson — cashflows = [{amount, date}]
+// Negative amount = money paid out (purchase), positive = money received (dividend / current value)
+function xirr(cashflows, guess = 0.1) {
+  const d0   = cashflows[0].date.getTime();
+  const DAYS = 365.25 * 86400000;
+  const npv  = r => cashflows.reduce((s, cf) => {
+    const t = (cf.date.getTime() - d0) / DAYS;
+    return s + cf.amount / Math.pow(1 + r, t);
+  }, 0);
+  const dnpv = r => cashflows.reduce((s, cf) => {
+    const t = (cf.date.getTime() - d0) / DAYS;
+    return s - t * cf.amount / Math.pow(1 + r, t + 1);
+  }, 0);
+
+  let rate = guess;
+  for (let i = 0; i < 200; i++) {
+    const f  = npv(rate);
+    const df = dnpv(rate);
+    if (Math.abs(df) < 1e-12) break;
+    const next = rate - f / df;
+    if (Math.abs(next - rate) < 1e-8) return next;
+    rate = next;
+    if (rate <= -1) rate = -0.999; // guard against going below -100%
+  }
+  return rate;
+}
+
+let p6Rows = [], p6SortCol = 9, p6SortAsc = false;
+
+function buildReturns() {
+  const status = document.getElementById('p6status');
+
+  // Need purchases and dividends built first
+  const purchases = p2Rows.length ? p2Rows : buildPurchases(allRows);
+  const divRows   = p4Rows.length ? p4Rows : buildDividends(allRows);
+
+  // Check if we have live prices — use p3Rows (already fetched by Portfolio tab)
+  const hasPrices = p3Rows.length && p3Rows.some(r => r.currentVal != null);
+  if (!hasPrices) {
+    status.textContent = 'Live prices not loaded yet — open Portfolio tab first, then come back.';
+  } else {
+    status.textContent = '';
+  }
+
+  const today = new Date();
+
+  // Build per-ISIN maps
+  const map = {};
+
+  // Purchase cash flows (money out → negative)
+  for (const r of purchases) {
+    const key = r.isin || r.asset;
+    if (!map[key]) map[key] = {
+      asset: r.asset, isin: r.isin,
+      cashflows: [], firstDate: null,
+      totalChf: 0, units: 0, divReceived: 0, currentVal: null
+    };
+    const d = parseDMY(r.date);
+    if (d) {
+      map[key].cashflows.push({ amount: -(r.totalChf || 0), date: d });
+      if (!map[key].firstDate || d < map[key].firstDate) map[key].firstDate = d;
+    }
+    map[key].totalChf += r.totalChf || 0;
+    map[key].units    += r.units    || 0;
+  }
+
+  // Dividend cash flows (money in → positive)
+  for (const r of divRows) {
+    const key = r.isin || r.asset;
+    if (!map[key]) continue;
+    const d = parseDMY(r.date);
+    if (d && r.netChf) {
+      map[key].cashflows.push({ amount: r.netChf, date: d });
+      map[key].divReceived += r.netChf;
+    }
+  }
+
+  // Current market value as final positive cash flow (today)
+  for (const p3r of p3Rows) {
+    const key = p3r.isin || p3r.asset;
+    if (!map[key]) continue;
+    map[key].currentVal = p3r.currentVal;
+    if (p3r.currentVal != null) {
+      map[key].cashflows.push({ amount: p3r.currentVal, date: today });
+    }
+  }
+
+  // Compute XIRR for each asset
+  p6Rows = Object.values(map).map(r => {
+    let xirrVal = null;
+    if (r.currentVal != null && r.cashflows.length >= 2) {
+      // Must have at least one negative and one positive cash flow
+      const hasOut = r.cashflows.some(cf => cf.amount < 0);
+      const hasIn  = r.cashflows.some(cf => cf.amount > 0);
+      if (hasOut && hasIn) {
+        try {
+          // Sort cashflows by date (XIRR requires first CF to be earliest)
+          const sorted = [...r.cashflows].sort((a, b) => a.date - b.date);
+          xirrVal = xirr(sorted);
+          // Reject unrealistic values (> 1000% or < -100%)
+          if (!isFinite(xirrVal) || xirrVal > 10 || xirrVal < -1) xirrVal = null;
+        } catch(e) { xirrVal = null; }
+      }
+    }
+    return { ...r, xirrVal };
+  }).sort((a, b) => a.asset.localeCompare(b.asset));
+
+  renderReturnsTable();
+  wireP6Sort();
+}
+
+function wireP6Sort() {
+  document.querySelectorAll('#p6hr th').forEach(th => {
+    th.onclick = () => {
+      const c = +th.dataset.col;
+      if (p6SortCol === c) p6SortAsc = !p6SortAsc;
+      else { p6SortCol = c; p6SortAsc = false; }
+      document.querySelectorAll('#p6hr th').forEach(h => h.classList.remove('sa','sd'));
+      th.classList.add(p6SortAsc ? 'sa' : 'sd');
+      renderReturnsTable();
+    };
+  });
+  document.querySelector(`#p6hr th[data-col="${p6SortCol}"]`).classList.add('sd');
+}
+
+function renderReturnsTable() {
+  const numCols = new Set([4, 5, 6, 7, 8, 9]);
+  const sorted  = [...p6Rows].sort((a, b) => {
+    const va = [null, a.asset, a.isin, a.firstDate?.getTime() ?? 0, a.units, a.totalChf,
+                a.divReceived, a.currentVal ?? -Infinity, (a.currentVal??0)+a.divReceived-a.totalChf, a.xirrVal ?? -Infinity];
+    const vb = [null, b.asset, b.isin, b.firstDate?.getTime() ?? 0, b.units, b.totalChf,
+                b.divReceived, b.currentVal ?? -Infinity, (b.currentVal??0)+b.divReceived-b.totalChf, b.xirrVal ?? -Infinity];
+    const cmp = numCols.has(p6SortCol)
+      ? (va[p6SortCol] || 0) - (vb[p6SortCol] || 0)
+      : String(va[p6SortCol]).localeCompare(String(vb[p6SortCol]));
+    return p6SortAsc ? cmp : -cmp;
+  });
+
+  // Totals row
+  const totInvested = p6Rows.reduce((s, r) => s + r.totalChf, 0);
+  const totDiv      = p6Rows.reduce((s, r) => s + r.divReceived, 0);
+  const totVal      = p6Rows.filter(r => r.currentVal != null).reduce((s, r) => s + r.currentVal, 0);
+  const totReturn   = totVal + totDiv - p6Rows.filter(r => r.currentVal != null).reduce((s, r) => s + r.totalChf, 0);
+  const totColor    = totReturn >= 0 ? '#4caf50' : '#e94560';
+
+  // Portfolio-level XIRR (all cash flows combined)
+  let portfolioXirr = null;
+  try {
+    const allCFs = p6Rows.flatMap(r => r.cashflows);
+    if (allCFs.some(cf => cf.amount < 0) && allCFs.some(cf => cf.amount > 0)) {
+      const sorted2 = [...allCFs].sort((a, b) => a.date - b.date);
+      const x = xirr(sorted2);
+      if (isFinite(x) && x > -1 && x <= 10) portfolioXirr = x;
+    }
+  } catch(e) {}
+
+  const xirrTotCell = portfolioXirr != null
+    ? `<span style="color:${portfolioXirr>=0?'#4caf50':'#e94560'};font-size:14px;font-weight:700">${portfolioXirr>=0?'+':''}${(portfolioXirr*100).toFixed(2)}%</span>`
+    : '—';
+
+  const totRow = `<tr style="background:#0f3460;font-weight:600;border-bottom:2px solid #1a4a80">
+    <td colspan="3" style="padding:8px 10px;color:#aaa">TOTAL PORTFOLIO</td>
+    <td style="padding:8px 10px"></td>
+    <td style="padding:8px 10px"></td>
+    <td style="text-align:right;padding:8px 10px;color:#aaa">CHF ${fmtN(totInvested)}</td>
+    <td style="text-align:right;padding:8px 10px;color:#4caf50">${totDiv > 0 ? 'CHF ' + fmtN(totDiv) : ''}</td>
+    <td style="text-align:right;padding:8px 10px">CHF ${fmtN(totVal)}</td>
+    <td style="text-align:right;padding:8px 10px"><span style="color:${totColor}">${totReturn>=0?'+':''}CHF ${fmtN(totReturn)}</span></td>
+    <td style="text-align:right;padding:8px 10px">${xirrTotCell}</td>
+  </tr>`;
+
+  const rows = sorted.map((r, i) => {
+    const fmtDate = d => d ? d.toLocaleDateString('de-CH') : '—';
+    const totalReturn = (r.currentVal ?? 0) + r.divReceived - r.totalChf;
+    const retColor    = totalReturn >= 0 ? '#4caf50' : '#e94560';
+    const hasVal      = r.currentVal != null;
+
+    let xirrCell = '—';
+    if (!hasVal) {
+      xirrCell = '<span style="color:#555;font-size:11px">need prices</span>';
+    } else if (r.xirrVal != null) {
+      const pct   = (r.xirrVal * 100).toFixed(2);
+      const color = r.xirrVal >= 0 ? '#4caf50' : '#e94560';
+      const bar   = Math.min(Math.abs(r.xirrVal * 100), 100);
+      const barColor = r.xirrVal >= 0 ? '#1a4a1a' : '#4a1a1a';
+      xirrCell = `<div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
+        <div style="width:60px;height:6px;background:#1e2a45;border-radius:3px;overflow:hidden">
+          <div style="width:${bar}%;height:100%;background:${color};border-radius:3px"></div>
+        </div>
+        <span style="color:${color};font-weight:700;font-size:13px;min-width:58px;text-align:right">${r.xirrVal>=0?'+':''}${pct}%</span>
+      </div>`;
+    }
+
+    return `<tr>
+      <td style="color:#555">${i + 1}</td>
+      <td>${esc(r.asset)}</td>
+      <td style="font-family:monospace;font-size:11px">${esc(r.isin)}</td>
+      <td>${fmtDate(r.firstDate)}</td>
+      <td style="text-align:right">${r.units % 1 === 0 ? r.units : fmtN(r.units)}</td>
+      <td style="text-align:right;color:#aaa">CHF ${fmtN(r.totalChf)}</td>
+      <td style="text-align:right;color:#4caf50">${r.divReceived > 0 ? 'CHF ' + fmtN(r.divReceived) : '—'}</td>
+      <td style="text-align:right;font-weight:600">${hasVal ? 'CHF ' + fmtN(r.currentVal) : '—'}</td>
+      <td style="text-align:right">${hasVal ? `<span style="color:${retColor}">${totalReturn>=0?'+':''}CHF ${fmtN(totalReturn)}</span>` : '—'}</td>
+      <td style="text-align:right">${xirrCell}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('p6body').innerHTML = totRow + rows;
 }
 </script>
 </body>
