@@ -85,6 +85,7 @@
 
     h2 { font-size: 16px; color: #e94560; margin-bottom: 4px; }
     .sub { color: #888; font-size: 12px; margin-bottom: 14px; }
+    .chf-note { font-size: 11px; color: #556; margin-bottom: 6px; text-align: right; }
 
     /* ── Loading / error ── */
     .loading { padding: 40px; text-align: center; color: #555; font-size: 14px; }
@@ -115,6 +116,7 @@
     <button class="btn" onclick="buildReturns()">&#8635; Refresh</button>
     <span id="p6status" style="font-size:12px;color:#888"></span>
   </div>
+  <p class="chf-note">* All values are in CHF</p>
   <div class="table-wrap">
     <table id="p6table">
       <thead>
@@ -124,10 +126,10 @@
           <th data-col="2">ISIN<span class="si"></span></th>
           <th data-col="3">First Buy<span class="si"></span></th>
           <th data-col="4" style="text-align:right">Units<span class="si"></span></th>
-          <th data-col="5" style="text-align:right">Total Invested CHF<span class="si"></span></th>
-          <th data-col="6" style="text-align:right">Dividends CHF<span class="si"></span></th>
-          <th data-col="7" style="text-align:right">Current Value CHF<span class="si"></span></th>
-          <th data-col="8" style="text-align:right">Total Return CHF<span class="si"></span></th>
+          <th data-col="5" style="text-align:right">Total Invested<span class="si"></span></th>
+          <th data-col="6" style="text-align:right">Dividends<span class="si"></span></th>
+          <th data-col="7" style="text-align:right">Current Value<span class="si"></span></th>
+          <th data-col="8" style="text-align:right">Total Return<span class="si"></span></th>
           <th data-col="9" style="text-align:right">Annual Return %<span class="si"></span></th>
         </tr>
       </thead>
@@ -177,6 +179,7 @@
     <span class="info" id="rc"></span>
   </div>
 
+  <p class="chf-note">* All values are in CHF</p>
   <div class="table-wrap" id="tableWrap">
     <div class="loading">Loading data…</div>
   </div>
@@ -194,6 +197,7 @@
     <div><label>Search:&nbsp;</label><input type="text" id="p2gs" placeholder="Asset, ISIN…"></div>
     <span class="info" id="p2rc"></span>
   </div>
+  <p class="chf-note">* All values are in CHF</p>
   <div class="table-wrap">
     <table id="p2table">
       <thead>
@@ -204,9 +208,9 @@
           <th data-col="3" style="text-align:right">Units<span class="si"></span></th>
           <th data-col="4" style="text-align:right">Price (orig.ccy)<span class="si"></span></th>
           <th data-col="5">Orig.Ccy<span class="si"></span></th>
-          <th data-col="6" style="text-align:right">Rate CHF/unit<span class="si"></span></th>
-          <th data-col="7" style="text-align:right">Fee CHF<span class="si"></span></th>
-          <th data-col="8" style="text-align:right">Total CHF<span class="si"></span></th>
+          <th data-col="6" style="text-align:right">Rate/unit<span class="si"></span></th>
+          <th data-col="7" style="text-align:right">Fee<span class="si"></span></th>
+          <th data-col="8" style="text-align:right">Total<span class="si"></span></th>
         </tr>
       </thead>
       <tbody id="p2body"></tbody>
@@ -222,6 +226,7 @@
     <button class="btn" onclick="buildPortfolio()">&#8635; Refresh Prices</button>
     <span id="p3status" style="font-size:12px;color:#888"></span>
   </div>
+  <p class="chf-note">* All values are in CHF</p>
   <div class="table-wrap">
     <table id="p3table">
       <thead>
@@ -230,11 +235,11 @@
           <th data-col="1">Asset<span class="si"></span></th>
           <th data-col="2">ISIN<span class="si"></span></th>
           <th data-col="3" style="text-align:right">Total Units<span class="si"></span></th>
-          <th data-col="4" style="text-align:right">Total CHF Invested<span class="si"></span></th>
-          <th data-col="5" style="text-align:right">Dividends Received CHF<span class="si"></span></th>
-          <th data-col="6" style="text-align:right">Current Price CHF<span class="si"></span></th>
-          <th data-col="7" style="text-align:right">Current Value CHF<span class="si"></span></th>
-          <th data-col="8" style="text-align:right">Total Return CHF<span class="si"></span></th>
+          <th data-col="4" style="text-align:right">Total Invested<span class="si"></span></th>
+          <th data-col="5" style="text-align:right">Dividends Received<span class="si"></span></th>
+          <th data-col="6" style="text-align:right">Current Price<span class="si"></span></th>
+          <th data-col="7" style="text-align:right">Current Value<span class="si"></span></th>
+          <th data-col="8" style="text-align:right">Total Return<span class="si"></span></th>
         </tr>
       </thead>
       <tbody id="p3body"></tbody>
@@ -246,13 +251,14 @@
 <div id="t5" class="tab-content">
   <h2>Dividend Summary by Asset</h2>
   <p class="sub">Total net dividend received per asset (after tax, in CHF)</p>
+  <p class="chf-note">* All values are in CHF</p>
   <div class="table-wrap">
     <table id="p5table">
       <thead>
         <tr id="p5hr">
           <th data-col="0" style="width:50px">No<span class="si"></span></th>
           <th data-col="1">Asset<span class="si"></span></th>
-          <th data-col="2" style="text-align:right">Total Dividend After Tax (CHF)<span class="si"></span></th>
+          <th data-col="2" style="text-align:right">Total Dividend After Tax<span class="si"></span></th>
         </tr>
       </thead>
       <tbody id="p5body"></tbody>
@@ -268,6 +274,7 @@
     <div><label>Search:&nbsp;</label><input type="text" id="p4gs" placeholder="Asset…"></div>
     <span class="info" id="p4rc"></span>
   </div>
+  <p class="chf-note">* All values are in CHF</p>
   <div class="table-wrap">
     <table id="p4table">
       <thead>
@@ -275,9 +282,9 @@
           <th data-col="0">Date<span class="si"></span></th>
           <th data-col="1">Asset<span class="si"></span></th>
           <th data-col="2">ISIN<span class="si"></span></th>
-          <th data-col="3" style="text-align:right">Dividend CHF<span class="si"></span></th>
-          <th data-col="4" style="text-align:right">Tax CHF<span class="si"></span></th>
-          <th data-col="5" style="text-align:right">Net Received CHF<span class="si"></span></th>
+          <th data-col="3" style="text-align:right">Dividend<span class="si"></span></th>
+          <th data-col="4" style="text-align:right">Tax<span class="si"></span></th>
+          <th data-col="5" style="text-align:right">Net Received<span class="si"></span></th>
         </tr>
       </thead>
       <tbody id="p4body"></tbody>
