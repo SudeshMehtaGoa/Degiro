@@ -21,6 +21,7 @@ A local, self-hosted investment dashboard for DEGIRO brokerage accounts. Drop in
 - Total Return = Capital Gain + Dividends Received
 - XIRR accounts for exact purchase dates, dividend dates, and current value
 - **Donut chart** on Portfolio tab — visual allocation by current value, with mouseover tooltip (asset name, CHF value, % share)
+- **Portfolio history chart** on Portfolio tab — line chart showing portfolio value vs total invested over time (weekly data points, hover tooltip showing date, value, gain/loss)
 - **Horizontal bar chart** on Returns tab — XIRR per asset at a glance, green = positive, red = negative
 - Totals row pinned at top of every table
 - Natural page scroll on all tabs — full table always visible, no cramped scroll boxes
@@ -63,6 +64,7 @@ dashboard.html ← single-file frontend (HTML + CSS + vanilla JS)
 | Live prices | [`yfinance`](https://github.com/ranaroussi/yfinance) |
 | XIRR calculation | Vanilla JavaScript (Newton-Raphson algorithm, in-browser) |
 | Benchmark data | `yfinance` historical prices (SPY, ^SSMI, URTH) via `/benchmark` endpoint |
+| Portfolio history | `yfinance` weekly OHLCV + FX history via `/history` endpoint (1 hr server cache) |
 | Charts | Inline SVG (no charting library — pure code) |
 | Frontend | Vanilla HTML + CSS + JavaScript (no frameworks) |
 | Data source | DEGIRO `Account.csv` export |
@@ -113,7 +115,17 @@ The dashboard opens automatically in your browser. The server tries ports `8081 
 ## Tab Details
 
 ### Portfolio
-Shows your current holdings with live prices. Includes a **donut chart** above the table showing allocation by current market value — each slice is one asset, with % and CHF value in the legend. Columns:
+Shows your current holdings with live prices. Includes two charts below the table:
+
+**Donut chart** — allocation by current market value. Each slice is one asset, with % and CHF value in the legend. Hover for a tooltip showing asset name, value, and share.
+
+**Portfolio history chart** — line chart showing how your total portfolio value has grown since your first purchase. Two lines:
+- **Cyan (solid)** — total portfolio value in CHF each week (units held × historical price × historical FX rate)
+- **Orange (dashed)** — cumulative CHF invested (sum of all purchases up to that week)
+
+The gap between the two lines is your gain. Hover anywhere on the chart for a tooltip showing date, portfolio value, total invested, and gain/loss. Data is fetched weekly from Yahoo Finance and cached on the server for 1 hour.
+
+Columns:
 - Units held, Total Invested, Dividends Received, Current Price, Current Value, Total Return
 - **Total Return = Current Value − CHF Invested + Dividends Received**
 
@@ -168,6 +180,23 @@ Full raw CSV data — all rows, sortable by any column, filterable per column, p
 3. Fetches `fast_info.last_price` and `fast_info.currency`
 4. Converts to CHF using live USDCHF/EURCHF/GBPCHF rates
 5. Returns JSON, cached for 5 minutes
+
+---
+
+## How the Portfolio History Chart Works
+
+1. Browser sends `GET /history?isins=...&from=YYYY-MM-DD` (first purchase date)
+2. `server.py` fetches **weekly** historical close prices for each ISIN via `yf.Ticker(sym).history(interval='1wk')`
+3. Also fetches weekly USDCHF, EURCHF, GBPCHF history for accurate CHF conversion
+4. Returns all data as JSON, cached on the server for **1 hour**
+5. Browser then for each weekly date:
+   - Sums units held per ISIN (from purchases up to that date)
+   - Looks up historical price and FX rate for that date
+   - Computes: `portfolio_value = Σ (units × price × fx_rate)`
+   - Computes: `total_invested = Σ CHF paid in purchases up to that date`
+6. Renders a 2-line SVG chart with hover tooltip
+
+> Note: Because this fetches years of weekly data for every holding, the first load may take 10–20 seconds. Subsequent loads within the same server session are served from cache instantly.
 
 **GBX (pence):** automatically divided by 100 before CHF conversion.
 
@@ -245,4 +274,4 @@ That's it. No code changes, no imports, no configuration.
 - `yfinance` may occasionally fail for certain ISINs — add them to `ISIN_OVERRIDES`
 - Sold positions are not yet filtered out of the Portfolio and Returns tabs
 - XIRR requires Portfolio tab to be opened first (to load live prices)
-- No historical portfolio value chart
+- History chart first load can take 10–20 seconds (fetching years of weekly data for all holdings)

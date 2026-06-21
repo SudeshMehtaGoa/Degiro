@@ -20,6 +20,10 @@ _price_cache = {}
 _cache_ts    = {}
 SKIP_ISINS   = {'NLFLATEXACNT'}
 
+_history_cache    = None
+_history_cache_ts = 0
+HISTORY_CACHE_TTL = 3600   # 1 hour — weekly history data changes slowly
+
 # ISINs that Yahoo Finance search cannot resolve — add more here as needed
 ISIN_OVERRIDES = {
     'US02079K3059': 'GOOGL',   # Alphabet Inc Class A
@@ -103,6 +107,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.handle_prices()
         elif self.path.startswith('/benchmark'):
             self.handle_benchmark()
+        elif self.path.startswith('/history'):
+            self.handle_history()
         else:
             super().do_GET()
 
@@ -213,6 +219,80 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 result[symbol] = {'name': name, 'error': str(e)}
                 print(f'  {symbol}: ERROR {e}')
 
+        self._json(result, 200)
+
+    def handle_history(self):
+        global _history_cache, _history_cache_ts
+        if yf is None:
+            self._json({'error': 'yfinance not installed'}, 503)
+            return
+
+        parsed    = urllib.parse.urlparse(self.path)
+        params    = urllib.parse.parse_qs(parsed.query)
+        raw       = params.get('isins', [''])[0]
+        from_date = params.get('from', [''])[0]
+
+        isins = [i.strip() for i in raw.split(',')
+                 if i.strip() and i.strip() not in SKIP_ISINS]
+        if not from_date or not isins:
+            self._json({'error': 'missing isins= or from= parameter'}, 400)
+            return
+
+        # Serve from cache if key matches and still fresh
+        now       = time.time()
+        cache_key = f'{from_date}:{",".join(sorted(isins))}'
+        if (_history_cache and
+                _history_cache.get('_key') == cache_key and
+                (now - _history_cache_ts) < HISTORY_CACHE_TTL):
+            print('[history] serving from cache')
+            self._json(_history_cache, 200)
+            return
+
+        print(f'\n[history] from={from_date}, {len(isins)} ISINs')
+        result = {'stocks': {}, 'fx': {}, '_key': cache_key}
+
+        # Weekly FX history (USDCHF, EURCHF, GBPCHF)
+        for pair, ccy in [('USDCHF=X', 'USD'), ('EURCHF=X', 'EUR'), ('GBPCHF=X', 'GBP')]:
+            try:
+                hist = yf.Ticker(pair).history(start=from_date, interval='1wk')
+                if not hist.empty:
+                    result['fx'][ccy] = {
+                        'dates': [d.strftime('%Y-%m-%d') for d in hist.index],
+                        'rates': [round(float(p), 6) for p in hist['Close']],
+                    }
+                    print(f'  [fx] {ccy}: {len(hist)} weeks')
+            except Exception as e:
+                print(f'  [history] FX {pair}: {e}')
+
+        # Weekly stock history for each ISIN
+        for isin in isins:
+            sym = isin_to_symbol(isin)
+            if not sym:
+                result['stocks'][isin] = {'error': 'symbol not found'}
+                continue
+            try:
+                ticker = yf.Ticker(sym)
+                hist   = ticker.history(start=from_date, interval='1wk')
+                try:
+                    ccy = ticker.fast_info.currency or 'USD'
+                except Exception:
+                    ccy = 'USD'
+                if hist.empty:
+                    result['stocks'][isin] = {'error': 'no data', 'symbol': sym}
+                else:
+                    result['stocks'][isin] = {
+                        'symbol'  : sym,
+                        'currency': ccy,
+                        'dates'   : [d.strftime('%Y-%m-%d') for d in hist.index],
+                        'prices'  : [round(float(p), 4) for p in hist['Close']],
+                    }
+                    print(f'  {isin} → {sym} ({ccy}): {len(hist)} weeks')
+            except Exception as e:
+                result['stocks'][isin] = {'error': str(e), 'symbol': sym}
+                print(f'  {isin} → {sym}: ERROR {e}')
+
+        _history_cache    = result
+        _history_cache_ts = now
         self._json(result, 200)
 
     def _json(self, data, status):

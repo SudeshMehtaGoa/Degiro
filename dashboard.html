@@ -248,6 +248,7 @@
     </table>
   </div>
   <div id="p3chart" style="margin-top:20px"></div>
+  <div id="p3history" style="margin-top:24px"></div>
 </div>
 
 <!-- ── Tab 5: Dividend Summary ── -->
@@ -791,6 +792,7 @@ function buildPortfolio() {
   wirePo3Sort();
   renderP3Table();
   fetchLivePrices();
+  fetchHistory(purchases);
 }
 
 function wirePo3Sort() {
@@ -1256,6 +1258,239 @@ function renderPortfolioChart() {
     <text x="${cx}" y="${cy + 8}"  text-anchor="middle" fill="#e0e0e0" font-size="12" font-weight="600">CHF ${fmtN(total)}</text>
     ${legend}
   </svg>`;
+}
+
+// ── Historical portfolio value chart ──────────────────────
+let _historyData = null;
+
+async function fetchHistory(purchases) {
+  const isins = p3Rows.map(r => r.isin).filter(Boolean);
+  if (!isins.length || !purchases.length) return;
+
+  // First purchase date → YYYY-MM-DD
+  let firstIso = null;
+  for (const p of purchases) {
+    if (!p.date) continue;
+    const [d, m, y] = p.date.split('-');
+    const iso = `${y}-${m}-${d}`;
+    if (!firstIso || iso < firstIso) firstIso = iso;
+  }
+  if (!firstIso) return;
+
+  const el = document.getElementById('p3history');
+  if (el) el.innerHTML = '<div style="padding:16px 0;color:#444;font-size:12px">Loading portfolio history…</div>';
+
+  try {
+    const url = `/history?isins=${encodeURIComponent(isins.join(','))}&from=${firstIso}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    _historyData = await res.json();
+    renderHistoryChart(purchases);
+  } catch(e) {
+    console.error('[history]', e);
+    const el2 = document.getElementById('p3history');
+    if (el2) el2.innerHTML = `<div style="padding:8px;color:#555;font-size:11px">History chart unavailable: ${e.message}</div>`;
+  }
+}
+
+function renderHistoryChart(purchases) {
+  const el = document.getElementById('p3history');
+  if (!el || !_historyData) return;
+
+  const stocks  = _historyData.stocks || {};
+  const fxData  = _historyData.fx    || {};
+
+  // Build date→value lookup from arrays
+  function makeLookup(dates, vals) {
+    const m = {};
+    dates.forEach((d, i) => { m[d] = vals[i]; });
+    return m;
+  }
+
+  // Given a lookup map, return the last known value at or before date d
+  function lookup(map, d) {
+    if (map[d] !== undefined) return map[d];
+    const keys = Object.keys(map).filter(k => k <= d).sort();
+    return keys.length ? map[keys[keys.length - 1]] : null;
+  }
+
+  // FX lookup: {USD: {date→rate}, EUR: ..., GBP: ...}
+  const fxLookup = {};
+  for (const [ccy, data] of Object.entries(fxData)) {
+    fxLookup[ccy] = makeLookup(data.dates, data.rates);
+  }
+
+  // Stock lookup: {isin: {date→price}}, stockCcy: {isin: currency}
+  const stockLookup = {}, stockCcy = {};
+  for (const [isin, data] of Object.entries(stocks)) {
+    if (data.error || !data.dates) continue;
+    stockLookup[isin] = makeLookup(data.dates, data.prices);
+    stockCcy[isin]    = data.currency || 'USD';
+  }
+
+  // Collect all weekly dates from all stock histories
+  const dateSet = new Set();
+  for (const data of Object.values(stocks)) {
+    if (data.dates) data.dates.forEach(d => dateSet.add(d));
+  }
+  const allDates = [...dateSet].sort();
+  if (!allDates.length) { el.innerHTML = ''; return; }
+
+  // DD-MM-YYYY → YYYY-MM-DD
+  const toIso = s => { const [d,m,y] = s.split('-'); return `${y}-${m}-${d}`; };
+
+  // For each weekly date compute portfolio value (CHF) and cumulative invested (CHF)
+  const portSeries = [], invSeries = [];
+
+  for (const d of allDates) {
+    const unitsHeld = {};
+    let totalInvested = 0;
+
+    for (const p of purchases) {
+      if (!p.date || !p.isin) continue;
+      if (toIso(p.date) <= d) {
+        unitsHeld[p.isin] = (unitsHeld[p.isin] || 0) + (p.units || 0);
+        totalInvested     += p.totalChf || 0;
+      }
+    }
+
+    let portVal = 0, hasPrice = false;
+    for (const [isin, units] of Object.entries(unitsHeld)) {
+      if (units <= 0 || !stockLookup[isin]) continue;
+      const price = lookup(stockLookup[isin], d);
+      if (price == null) continue;
+      const ccy = stockCcy[isin] || 'USD';
+      let priceChf;
+      if      (ccy === 'CHF') { priceChf = price; }
+      else if (ccy === 'GBX') { const r = lookup(fxLookup['GBP'] || {}, d); priceChf = r ? price / 100 * r : null; }
+      else                    { const r = lookup(fxLookup[ccy]   || {}, d); priceChf = r ? price * r        : null; }
+      if (priceChf != null) { portVal += units * priceChf; hasPrice = true; }
+    }
+
+    if (hasPrice) {
+      portSeries.push({ d, val: portVal });
+      invSeries.push({ d, val: totalInvested });
+    }
+  }
+
+  if (!portSeries.length) { el.innerHTML = ''; return; }
+
+  // SVG layout
+  const W = 760, H = 210, padL = 72, padR = 16, padT = 14, padB = 28;
+  const cW = W - padL - padR, cH = H - padT - padB;
+  const n  = portSeries.length;
+
+  const allVals = [...portSeries.map(p => p.val), ...invSeries.map(p => p.val)];
+  const minV    = Math.min(...allVals) * 0.95;
+  const maxV    = Math.max(...allVals) * 1.05;
+  const vRange  = maxV - minV || 1;
+
+  const xS = i => padL + (i / Math.max(n - 1, 1)) * cW;
+  const yS = v => padT + cH - ((v - minV) / vRange) * cH;
+
+  const portPath = portSeries.map((p, i) => `${i?'L':'M'} ${xS(i).toFixed(1)} ${yS(p.val).toFixed(1)}`).join(' ');
+  const invPath  = invSeries.map ((p, i) => `${i?'L':'M'} ${xS(i).toFixed(1)} ${yS(p.val).toFixed(1)}`).join(' ');
+  const areaPath = portPath + ` L ${xS(n-1).toFixed(1)} ${(padT+cH).toFixed(1)} L ${padL} ${(padT+cH).toFixed(1)} Z`;
+
+  // Y axis grid + labels
+  const yGrid = Array.from({length: 5}, (_, i) => {
+    const v = minV + vRange * i / 4;
+    const y = yS(v).toFixed(1);
+    return `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#1e2a45" stroke-width="1"/>
+            <text x="${padL-5}" y="${+y+4}" fill="#446" font-size="10" text-anchor="end">CHF ${fmtN(v)}</text>`;
+  }).join('');
+
+  // X axis labels — ~6 evenly spaced
+  const step = Math.max(1, Math.floor(n / 6));
+  const xLabels = portSeries.map((p, i) => {
+    if (i % step !== 0 && i !== n - 1) return '';
+    return `<text x="${xS(i).toFixed(1)}" y="${H-4}" fill="#446" font-size="10" text-anchor="middle">${p.d.slice(0,7)}</text>`;
+  }).join('');
+
+  // Hover data array embedded in SVG attribute
+  const hoverPts = portSeries.map((p, i) => {
+    const inv  = invSeries[i];
+    const gain = p.val - inv.val;
+    const gp   = inv.val > 0 ? (gain / inv.val * 100).toFixed(1) : '0.0';
+    return `[${xS(i).toFixed(1)},${yS(p.val).toFixed(1)},"${p.d}",${p.val.toFixed(0)},${inv.val.toFixed(0)},${gain.toFixed(0)},"${gp}"]`;
+  }).join(',');
+
+  const lastPort = portSeries[n-1].val;
+  const lastInv  = invSeries[n-1].val;
+  const totGain  = lastPort - lastInv;
+  const gColor   = totGain >= 0 ? '#4caf50' : '#e94560';
+
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:12px;color:#888">Portfolio Value Over Time</span>
+      <span style="font-size:12px">
+        <span style="color:#29b6f6">&#9644; Portfolio: CHF ${fmtN(lastPort)}</span>
+        &nbsp;·&nbsp;
+        <span style="color:#ff9800">&#9135;&#9135; Invested: CHF ${fmtN(lastInv)}</span>
+        &nbsp;·&nbsp;
+        <span style="color:${gColor}">${totGain>=0?'+':''}CHF ${fmtN(totGain)}</span>
+      </span>
+    </div>
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;max-height:${H}px;cursor:crosshair;display:block" font-family="Segoe UI,Arial"
+      onmousemove="p3HistMove(event,this,[${hoverPts}])"
+      onmouseleave="p3HistLeave()">
+      <defs>
+        <linearGradient id="hGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#29b6f6" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#29b6f6" stop-opacity="0.02"/>
+        </linearGradient>
+      </defs>
+      ${yGrid}
+      ${xLabels}
+      <path d="${areaPath}" fill="url(#hGrad)"/>
+      <path d="${invPath}"  fill="none" stroke="#ff9800" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.75"/>
+      <path d="${portPath}" fill="none" stroke="#29b6f6" stroke-width="2" opacity="0.95"/>
+      <line id="hLine" x1="0" y1="${padT}" x2="0" y2="${padT+cH}" stroke="#333" stroke-width="1" display="none"/>
+      <circle id="hDot" r="4" fill="#29b6f6" stroke="#1a1a2e" stroke-width="1.5" display="none"/>
+      <rect   id="hBox" width="168" height="76" rx="4" fill="#16213e" stroke="#0f3460" stroke-width="1" display="none"/>
+      <text id="hT0" font-size="11" display="none"/>
+      <text id="hT1" font-size="11" display="none"/>
+      <text id="hT2" font-size="11" display="none"/>
+      <text id="hT3" font-size="11" display="none"/>
+    </svg>`;
+}
+
+function p3HistMove(evt, svg, pts) {
+  if (!pts.length) return;
+  const rect  = svg.getBoundingClientRect();
+  const mx    = (evt.clientX - rect.left) / rect.width * svg.viewBox.baseVal.width;
+  let best = pts[0], bestDx = Infinity;
+  pts.forEach(p => { const dx = Math.abs(p[0] - mx); if (dx < bestDx) { bestDx = dx; best = p; } });
+
+  const [px, py, date, pv, iv, gain, gp] = best;
+  const W = svg.viewBox.baseVal.width;
+  const tipX = px + 12 > W - 180 ? px - 180 : px + 12;
+  const tipY = 18;
+  const gc   = gain >= 0 ? '#4caf50' : '#e94560';
+  const gs   = gain >= 0 ? '+' : '';
+
+  document.getElementById('hLine').setAttribute('x1', px); document.getElementById('hLine').setAttribute('x2', px); document.getElementById('hLine').removeAttribute('display');
+  document.getElementById('hDot').setAttribute('cx', px);  document.getElementById('hDot').setAttribute('cy', py);  document.getElementById('hDot').removeAttribute('display');
+  document.getElementById('hBox').setAttribute('x', tipX); document.getElementById('hBox').setAttribute('y', tipY); document.getElementById('hBox').removeAttribute('display');
+
+  const rows = [
+    {id:'hT0', text: date,                              color:'#aaa'},
+    {id:'hT1', text: `Portfolio  CHF ${fmtN(+pv)}`,    color:'#29b6f6'},
+    {id:'hT2', text: `Invested   CHF ${fmtN(+iv)}`,    color:'#ff9800'},
+    {id:'hT3', text: `Gain  ${gs}CHF ${fmtN(Math.abs(gain))}  (${gs}${gp}%)`, color: gc},
+  ];
+  rows.forEach(({id, text, color}, i) => {
+    const el = document.getElementById(id);
+    el.setAttribute('x', tipX + 10); el.setAttribute('y', tipY + 17 + i * 16);
+    el.setAttribute('fill', color); el.textContent = text;
+    el.removeAttribute('display');
+  });
+}
+
+function p3HistLeave() {
+  ['hLine','hDot','hBox','hT0','hT1','hT2','hT3'].forEach(id => {
+    const e = document.getElementById(id); if (e) e.setAttribute('display','none');
+  });
 }
 
 function renderXirrChart() {
