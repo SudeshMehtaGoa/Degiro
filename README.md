@@ -23,8 +23,11 @@ A local, self-hosted investment dashboard for DEGIRO brokerage accounts. Drop in
 - **Donut chart** on Portfolio tab — visual allocation by current value
 - **Horizontal bar chart** on Returns tab — XIRR per asset at a glance
 - Totals row pinned at top of every table
-- Full viewport layout — single scrollbar, no nested scroll
-- Column headers clean (no CHF clutter) — note above each table clarifies currency
+- Natural page scroll on all tabs — full table always visible, no cramped scroll boxes
+- Tab bar stays sticky at top while scrolling
+- Search filter on every tab — filter by asset name or ISIN
+- Column sort on every tab — click any header
+- Column headers clean (no CHF clutter) — `* All values are in CHF` note above each table
 - Prices cached for 5 minutes to avoid hammering Yahoo Finance
 - No database, no cloud — runs entirely on your machine
 
