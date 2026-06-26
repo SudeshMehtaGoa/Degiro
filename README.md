@@ -270,6 +270,14 @@ That's it. No code changes, no imports, no configuration.
 
 ---
 
+## Ratio Scorecard Notes
+
+- **Debt/Equity** — yfinance returns this value multiplied by 100 (percentage form). The dashboard divides by 100 before displaying so the number matches standard D/E ratios (e.g. Tesla shows 0.19, not 18.7). The colour thresholds (green < 1, caution 1–2, danger > 3) use standard D/E.
+- **ROE, Profit Margin, Dividend Yield** — yfinance returns these as decimals (0.049 = 4.9%). Displayed as percentages.
+- **Payout Ratio** — shown as 0.00% for companies that pay no dividend. Treat as N/A in that case.
+
+---
+
 ## Known Limitations
 
 - Prices are delayed (Yahoo Finance free tier — typically 15 min delay)

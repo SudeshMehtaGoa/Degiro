@@ -2367,8 +2367,8 @@ function renderAssetInfo(d) {
       score: v => v < 1.5 ? 'good' : v <= 3 ? 'caution' : 'danger',
       good:'< 1.5', caution:'1.5 – 3', danger:'> 5' },
     { label:'Debt / Equity',   desc:'Borrowed money vs own money',
-      raw: info.debtToEquity, disp: info.debtToEquity != null ? info.debtToEquity.toFixed(1) : null,
-      score: v => v < 100 ? 'good' : v <= 200 ? 'caution' : 'danger', // yfinance returns as %, so 100 = D/E of 1
+      raw: info.debtToEquity, disp: info.debtToEquity != null ? (info.debtToEquity/100).toFixed(2) : null,
+      score: v => v < 100 ? 'good' : v <= 200 ? 'caution' : 'danger', // yfinance returns D/E × 100
       good:'< 1', caution:'1 – 2', danger:'> 3' },
     { label:'ROE',             desc:'Return on shareholder equity',
       raw: info.returnOnEquity, disp: pct2(info.returnOnEquity),
