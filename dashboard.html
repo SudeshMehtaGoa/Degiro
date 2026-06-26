@@ -2314,7 +2314,7 @@ function renderAssetInfo(d) {
     {
       title: 'Dividends',
       items: [
-        { label:'Dividend Yield',   value: val(info.dividendYield, fmtP), sub:'annual', hint:'2-4% sustainable. >6% — check if payout ratio is safe.' },
+        { label:'Dividend Yield',   value: info.dividendYield != null ? ((info.dividendYield > 1 ? info.dividendYield : info.dividendYield*100).toFixed(2)+'%') : '—', sub:'annual', hint:'2-4% sustainable. >6% — check if payout ratio is safe.' },
         { label:'Dividend Rate',    value: val(info.dividendRate,  v=>`${info.currency||''} ${fmtN(v)}`), sub:'per share/year' },
         { label:'Payout Ratio',     value: val(info.payoutRatio,   fmtP), sub:'of earnings paid', hint:'<60% = sustainable. 60-80% = watch. >80% = dividend may be cut.' },
         { label:'Ex-Dividend Date', value: val(info.exDividendDate,v=>new Date(v*1000).toLocaleDateString()), sub:'' },
@@ -2379,7 +2379,8 @@ function renderAssetInfo(d) {
       score: v => v > 0.15 ? 'good' : v >= 0.05 ? 'caution' : 'danger',
       good:'> 15%', caution:'5 – 15%', danger:'< 5%' },
     { label:'Dividend Yield',  desc:'Annual dividend ÷ share price',
-      raw: info.dividendYield,  disp: pct2(info.dividendYield),
+      raw: info.dividendYield != null ? (info.dividendYield > 1 ? info.dividendYield/100 : info.dividendYield) : null,
+      disp: info.dividendYield != null ? ((info.dividendYield > 1 ? info.dividendYield : info.dividendYield*100).toFixed(2)+'%') : null,
       score: v => (v >= 0.02 && v <= 0.04) ? 'good' : v <= 0.06 ? 'caution' : 'danger',
       good:'2 – 4%', caution:'4 – 6%', danger:'> 8%' },
     { label:'Payout Ratio',    desc:'% of earnings paid as dividend',
