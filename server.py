@@ -320,7 +320,7 @@ if __name__ == '__main__':
         raise SystemExit(1)
 
     url = f'http://localhost:{PORT}/dashboard.html'
-    print(f'DEGIRO Dashboard  →  {url}')
+    print(f'DEGIRO Dashboard  ->  {url}')
     print('Press Ctrl+C to stop.\n')
     webbrowser.open(url)
     with httpd:
