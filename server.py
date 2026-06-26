@@ -284,7 +284,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     'returnOnEquity','returnOnAssets','debtToEquity',
                     'totalCash','totalDebt','freeCashflow',
                     'earningsGrowth','revenueGrowth',
-                    'recommendationKey','targetMeanPrice',
+                    'pegRatio',
+                    'recommendationKey','targetMeanPrice','targetHighPrice','targetLowPrice',
+                    'numberOfAnalystOpinions',
                 ]
                 info = {k: raw.get(k) for k in keep}
                 print(f'  {isin} → {sym}: info fetched OK')

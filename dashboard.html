@@ -72,6 +72,26 @@
     .b-oth  { background: #2a2a2a; color: #aaa;    }
 
     .pagination { display: flex; gap: 6px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+    /* ── Investment Rules tab ── */
+    .ir-section { margin-bottom:32px; }
+    .ir-title { font-size:14px;font-weight:700;color:#e94560;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #1e2a45; }
+    .ir-subtitle { font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px; }
+    .ir-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px; }
+    .ir-card { background:#16213e;border:1px solid #1e2a45;border-radius:6px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start; }
+    .ir-card.ir-gold { border-left:3px solid #ff9800; }
+    .ir-card.ir-warn { border-left:3px solid #e94560; }
+    .ir-num { font-size:22px;font-weight:800;color:#0f3460;line-height:1;min-width:28px; }
+    .ir-body { font-size:12px;color:#aaa;line-height:1.7; }
+    .ir-body strong { color:#e0e0e0; }
+    .ir-list { list-style:none;padding:0;margin:0; }
+    .ir-list li { font-size:12px;color:#aaa;padding:5px 0;border-bottom:1px solid #111827;line-height:1.5; }
+    .ir-list li::before { content:'›';color:#e94560;margin-right:8px;font-weight:700; }
+    .ir-list li strong { color:#e0e0e0; }
+    .ir-table { width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px; }
+    .ir-table th { background:#0f3460;color:#e0e0e0;padding:8px 10px;text-align:left;font-weight:600; }
+    .ir-table td { padding:7px 10px;border-bottom:1px solid #1e2a45;color:#aaa; }
+    .ir-table tr:hover td { background:#16213e; }
+
     .t7pb { padding:5px 12px;border-radius:4px;border:1px solid #0f3460;background:#16213e;color:#aaa;cursor:pointer;font-size:12px;font-weight:600; }
     .t7pb:hover { background:#0f3460;color:#fff; }
     .t7pb.active { background:#e94560;border-color:#e94560;color:#fff; }
@@ -112,6 +132,7 @@
   <div class="tab" data-tab="t6">Returns</div>
   <div class="tab" data-tab="t1">Transactions</div>
   <div class="tab" data-tab="t7">Asset Info</div>
+  <div class="tab" data-tab="t8">Investment Rules</div>
   <span class="meta" id="fileMeta"></span>
 </div>
 
@@ -146,6 +167,285 @@
     </table>
   </div>
   <div id="p6chart" style="margin-top:20px"></div>
+</div>
+
+<!-- ── Tab 8: Investment Rules ── -->
+<div id="t8" class="tab-content">
+  <h2>Investment Rules</h2>
+  <p class="sub">Your personal reference guide — read this before investing in any stock or ETF</p>
+
+  <div style="max-width:900px;line-height:1.75">
+
+    <!-- ── Rule sections ── -->
+    <div class="ir-section">
+      <div class="ir-title">🧠 The Golden Rules</div>
+      <div class="ir-grid">
+        <div class="ir-card ir-gold">
+          <div class="ir-num">1</div>
+          <div class="ir-body">
+            <strong>Understand before you invest.</strong>
+            If you cannot explain in two sentences what the company does and how it makes money — do not buy it. Complexity hides risk.
+          </div>
+        </div>
+        <div class="ir-card ir-gold">
+          <div class="ir-num">2</div>
+          <div class="ir-body">
+            <strong>Buy businesses, not tickers.</strong>
+            You are buying a share of a real company. Think like a business owner, not a gambler. Would you want to own this entire business?
+          </div>
+        </div>
+        <div class="ir-card ir-gold">
+          <div class="ir-num">3</div>
+          <div class="ir-body">
+            <strong>Price is what you pay, value is what you get.</strong>
+            A great company at a terrible price is a bad investment. A mediocre company at a great price can be a good one. Always compare price to value.
+          </div>
+        </div>
+        <div class="ir-card ir-gold">
+          <div class="ir-num">4</div>
+          <div class="ir-body">
+            <strong>Time in the market beats timing the market.</strong>
+            Nobody can predict short-term moves consistently. Invest regularly, hold patiently, let compounding do the work.
+          </div>
+        </div>
+        <div class="ir-card ir-gold">
+          <div class="ir-num">5</div>
+          <div class="ir-body">
+            <strong>Margin of safety.</strong>
+            Only buy when the price is meaningfully below your estimate of fair value. This protects you when your analysis is wrong — and it will be, sometimes.
+          </div>
+        </div>
+        <div class="ir-card ir-gold">
+          <div class="ir-num">6</div>
+          <div class="ir-body">
+            <strong>Never invest money you cannot afford to lose.</strong>
+            Markets can stay irrational longer than you can stay solvent. Keep 6 months of living expenses in cash, separate from investments.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Stock checklist ── -->
+    <div class="ir-section">
+      <div class="ir-title">📋 Before Buying Any Stock — Checklist</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+
+        <div>
+          <div class="ir-subtitle">✅ Must Pass</div>
+          <ul class="ir-list">
+            <li>Profitable — positive EPS and free cash flow</li>
+            <li>Revenue growing year-over-year</li>
+            <li>Debt/Equity below 2 (or below industry average)</li>
+            <li>P/E reasonable vs industry peers</li>
+            <li>I understand the business model</li>
+            <li>Management has a good track record</li>
+            <li>Competitive advantage (brand, patents, network effect)</li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="ir-subtitle">⚠️ Questions to Answer</div>
+          <ul class="ir-list">
+            <li>Why is it cheap if it looks cheap?</li>
+            <li>What is the bear case — what could go wrong?</li>
+            <li>Who are the competitors? Is the moat shrinking?</li>
+            <li>What % of my portfolio will this be? (&lt;10% per stock)</li>
+            <li>What is my exit plan if the thesis breaks?</li>
+            <li>Am I buying because of fundamentals or hype?</li>
+            <li>Would I be happy holding this for 5+ years?</li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="ir-subtitle">🟢 Positive Signals</div>
+          <ul class="ir-list">
+            <li>P/E below sector average</li>
+            <li>ROE above 15% consistently</li>
+            <li>Profit margin improving over 3 years</li>
+            <li>Dividend growing every year (for income stocks)</li>
+            <li>Payout ratio below 60%</li>
+            <li>Insider buying (management buys their own shares)</li>
+            <li>Price near 52-week low, not high</li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="ir-subtitle">🔴 Red Flags — Think Twice</div>
+          <ul class="ir-list">
+            <li>Negative free cash flow for 2+ years</li>
+            <li>Debt/Equity above 3</li>
+            <li>Dividend yield above 8% (often unsustainable)</li>
+            <li>Payout ratio above 80%</li>
+            <li>Revenue shrinking for 2+ consecutive quarters</li>
+            <li>CEO or CFO resigned recently without explanation</li>
+            <li>Stock up 200%+ in the last 12 months on no news</li>
+            <li>Everyone around you is talking about it (buy the rumour...)</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Ratio quick reference ── -->
+    <div class="ir-section">
+      <div class="ir-title">📊 Key Ratio Quick Reference</div>
+      <table class="ir-table">
+        <thead>
+          <tr><th>Ratio</th><th>What it measures</th><th>Good</th><th>Caution</th><th>Danger</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>P/E (Trailing)</td><td>How much you pay per CHF of earnings</td><td class="pos">&lt; 20</td><td class="neu">20–35</td><td class="neg">&gt; 40</td></tr>
+          <tr><td>P/E (Forward)</td><td>Based on expected future earnings</td><td class="pos">&lt; 18</td><td class="neu">18–30</td><td class="neg">&gt; 35</td></tr>
+          <tr><td>PEG Ratio</td><td>P/E adjusted for growth rate</td><td class="pos">&lt; 1</td><td class="neu">1–2</td><td class="neg">&gt; 2</td></tr>
+          <tr><td>Price / Book</td><td>Price vs net assets</td><td class="pos">&lt; 1.5</td><td class="neu">1.5–3</td><td class="neg">&gt; 5</td></tr>
+          <tr><td>Debt / Equity</td><td>Borrowed money vs own money</td><td class="pos">&lt; 1</td><td class="neu">1–2</td><td class="neg">&gt; 3</td></tr>
+          <tr><td>ROE</td><td>Return on shareholder equity</td><td class="pos">&gt; 15%</td><td class="neu">8–15%</td><td class="neg">&lt; 8%</td></tr>
+          <tr><td>Profit Margin</td><td>Net income as % of revenue</td><td class="pos">&gt; 15%</td><td class="neu">5–15%</td><td class="neg">&lt; 5%</td></tr>
+          <tr><td>Dividend Yield</td><td>Annual dividend ÷ share price</td><td class="pos">2–4%</td><td class="neu">4–6%</td><td class="neg">&gt; 8%</td></tr>
+          <tr><td>Payout Ratio</td><td>% of earnings paid as dividend</td><td class="pos">&lt; 60%</td><td class="neu">60–80%</td><td class="neg">&gt; 80%</td></tr>
+          <tr><td>Beta</td><td>Volatility vs the market</td><td class="pos">&lt; 1</td><td class="neu">1–1.5</td><td class="neg">&gt; 2</td></tr>
+          <tr><td>Free Cash Flow</td><td>Real cash generated after capex</td><td class="pos">Positive &amp; growing</td><td class="neu">Positive, flat</td><td class="neg">Negative</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:11px;color:#445;margin-top:8px">* Ranges are general guidelines. Always compare within the same industry — a bank naturally has higher debt than a software company.</div>
+    </div>
+
+    <!-- ── ETF checklist ── -->
+    <div class="ir-section">
+      <div class="ir-title">📦 Before Buying Any ETF — Checklist</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <div class="ir-subtitle">✅ Always Check</div>
+          <ul class="ir-list">
+            <li><strong>TER (expense ratio)</strong> — below 0.20% for major indexes, below 0.50% for niche</li>
+            <li><strong>AUM</strong> — at least $500M (too small = risk of closure)</li>
+            <li><strong>Index tracked</strong> — know exactly what you are buying (S&amp;P 500 ≠ MSCI World)</li>
+            <li><strong>Replication</strong> — physical preferred over synthetic (swaps)</li>
+            <li><strong>Dividend policy</strong> — accumulating (auto-reinvests) vs distributing (pays out)</li>
+            <li><strong>Currency</strong> — hedged vs unhedged (hedging costs ~0.5-1%/year)</li>
+          </ul>
+        </div>
+        <div>
+          <div class="ir-subtitle">💡 Good ETF Rules</div>
+          <ul class="ir-list">
+            <li>Broad market ETFs (MSCI World, S&amp;P 500) beat most active funds over 10+ years</li>
+            <li>One global ETF + one bond ETF = simple, effective portfolio</li>
+            <li>Accumulating ETFs are more tax-efficient in most countries (including Switzerland)</li>
+            <li>Rebalance once per year — do not touch in between</li>
+            <li>Never pay more than 0.50% TER for a broad index fund</li>
+            <li>Sector ETFs (tech, healthcare) = higher risk, use max 20% of portfolio</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Portfolio rules ── -->
+    <div class="ir-section">
+      <div class="ir-title">⚖️ Portfolio Construction Rules</div>
+      <div class="ir-grid">
+        <div class="ir-card">
+          <div class="ir-body">
+            <strong>Diversify but not too much.</strong>
+            10–20 stocks across different sectors is enough. More than 30 and you are just buying a very expensive index fund.
+          </div>
+        </div>
+        <div class="ir-card">
+          <div class="ir-body">
+            <strong>Maximum 10% in any single stock.</strong>
+            Even your highest conviction idea can be wrong. Position limits protect you from catastrophic single-stock risk.
+          </div>
+        </div>
+        <div class="ir-card">
+          <div class="ir-body">
+            <strong>Geographic diversification matters.</strong>
+            Do not put everything in Switzerland or the US. MSCI World gives you ~70% US automatically — consider adding emerging markets.
+          </div>
+        </div>
+        <div class="ir-card">
+          <div class="ir-body">
+            <strong>Age-based allocation.</strong>
+            A rough guide: % in bonds = your age. At 52, consider ~50% equities / 30% bonds / 20% alternatives. Adjust for your own risk tolerance.
+          </div>
+        </div>
+        <div class="ir-card">
+          <div class="ir-body">
+            <strong>Rebalance annually.</strong>
+            If one position grows to 20%+ of your portfolio, trim it back. Do not let winners turn into concentration risk.
+          </div>
+        </div>
+        <div class="ir-card">
+          <div class="ir-body">
+            <strong>Keep cash ready (5–10%).</strong>
+            Market crashes create buying opportunities. If you are fully invested, you cannot act when prices drop 30%.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Behavioural rules ── -->
+    <div class="ir-section">
+      <div class="ir-title">🧘 Behavioural Rules — The Hardest Part</div>
+      <div class="ir-grid">
+        <div class="ir-card ir-warn">
+          <div class="ir-body">
+            <strong>Never sell in panic.</strong>
+            Every market crash in history has eventually recovered. Selling during a crash locks in permanent losses and usually happens at exactly the wrong time.
+          </div>
+        </div>
+        <div class="ir-card ir-warn">
+          <div class="ir-body">
+            <strong>Never buy on hype.</strong>
+            By the time everyone is talking about a stock, the easy money has already been made. "Hot tips" from friends, news, or social media are late by definition.
+          </div>
+        </div>
+        <div class="ir-card ir-warn">
+          <div class="ir-body">
+            <strong>Do not check prices every day.</strong>
+            Daily price checking leads to emotional decisions. Review your portfolio monthly, or quarterly. Checking more often = worse decisions.
+          </div>
+        </div>
+        <div class="ir-card ir-warn">
+          <div class="ir-body">
+            <strong>Separate the stock from the story.</strong>
+            You can admire Apple products and still find the stock overvalued. Investing in companies just because you like them is an emotional bias.
+          </div>
+        </div>
+        <div class="ir-card ir-warn">
+          <div class="ir-body">
+            <strong>Be greedy when others are fearful.</strong>
+            The best buying opportunities come during market crashes, recessions, or sector crises — when everyone else is running away.
+          </div>
+        </div>
+        <div class="ir-card ir-warn">
+          <div class="ir-body">
+            <strong>Keep an investment journal.</strong>
+            Write down why you bought each position. When you want to sell, re-read it. Has the original thesis changed — or are you just reacting to noise?
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Swiss specific ── -->
+    <div class="ir-section">
+      <div class="ir-title">🇨🇭 Switzerland-Specific Notes</div>
+      <ul class="ir-list" style="max-width:700px">
+        <li><strong>Stamp duty (Stempelsteuer):</strong> 0.075% on Swiss securities, 0.15% on foreign — charged on every buy and sell. Factor this into your calculations for short-term trades.</li>
+        <li><strong>Withholding tax on dividends:</strong> Switzerland withholds 35% on Swiss dividends. You can reclaim most of it via your tax return (DA-1 form).</li>
+        <li><strong>US dividends:</strong> 15% withholding tax for Swiss residents (covered by US-CH tax treaty). Reclaimable via DA-1.</li>
+        <li><strong>Capital gains:</strong> Tax-free in Switzerland for private investors — this is a major advantage. Do not waste it on short-term trading (you become a "professional trader" if too active).</li>
+        <li><strong>Wealth tax:</strong> Your portfolio is part of your taxable wealth (Vermögenssteuer). Declare every year at year-end market value.</li>
+        <li><strong>Pillar 3a:</strong> Max CHF 7,258/year (2024) — fully tax-deductible. Use this for long-term equity exposure first before taxable accounts.</li>
+        <li><strong>DEGIRO costs:</strong> Low fees but charges connectivity fee (€2.50/month per exchange). Stick to major exchanges to avoid extra costs.</li>
+      </ul>
+    </div>
+
+    <div style="margin-top:32px;padding:16px;background:#111827;border-radius:6px;border-left:3px solid #e94560;font-size:12px;color:#666;line-height:1.7">
+      <strong style="color:#888">Disclaimer:</strong> These rules are for educational reference only and do not constitute financial advice.
+      Every investor's situation is different. Past performance does not guarantee future results.
+      For decisions involving significant capital, consult a licensed financial advisor.
+    </div>
+
+  </div>
 </div>
 
 <!-- ── Tab 7: Asset Info ── -->
@@ -1961,28 +2261,75 @@ function renderAssetInfo(d) {
     : '';
 
   // ── Key ratios ──
-  const ratios = [
-    { label:'Current Price',   value: val(info.currentPrice,   v => `${info.currency||''} ${fmtN(v)}`),  sub: info.currency || '' },
-    { label:'Market Cap',      value: val(info.marketCap,      fmtB),  sub: info.currency || '' },
-    { label:'P/E (Trailing)',  value: val(info.trailingPE,     v => fmtN(v)),  sub: 'ratio' },
-    { label:'P/E (Forward)',   value: val(info.forwardPE,      v => fmtN(v)),  sub: 'ratio' },
-    { label:'EPS (TTM)',       value: val(info.trailingEps,    v => fmtN(v)),  sub: info.currency || '' },
-    { label:'Dividend Yield',  value: val(info.dividendYield,  fmtP),  sub: 'annual' },
-    { label:'52-Week High',    value: val(info.fiftyTwoWeekHigh, v => fmtN(v)),  sub: info.currency || '' },
-    { label:'52-Week Low',     value: val(info.fiftyTwoWeekLow,  v => fmtN(v)),  sub: info.currency || '' },
-    { label:'Beta',            value: val(info.beta,           v => v.toFixed(2)),  sub: 'vs market' },
-    { label:'Revenue (TTM)',   value: val(info.totalRevenue,   fmtB),  sub: info.currency || '' },
-    { label:'Profit Margin',   value: val(info.profitMargins,  fmtP),  sub: '' },
-    { label:'Return on Equity',value: val(info.returnOnEquity, fmtP),  sub: 'TTM' },
+  // Analyst recommendation badge
+  const recMap = {strongbuy:'Strong Buy',buy:'Buy',hold:'Hold',underperform:'Underperform',sell:'Sell'};
+  const recColor= {strongbuy:'#4caf50',buy:'#8bc34a',hold:'#ff9800',underperform:'#ff5722',sell:'#e94560'};
+  const rec = info.recommendationKey ? info.recommendationKey.toLowerCase() : null;
+  const recBadge = rec ? `<span style="background:${recColor[rec]||'#555'};color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${recMap[rec]||rec}</span>` : '—';
+
+  const fmtCash = v => { const abs=Math.abs(v); const s=v<0?'-':''; return s+(abs>=1e9?(abs/1e9).toFixed(2)+'B':abs>=1e6?(abs/1e6).toFixed(2)+'M':fmtN(abs)); };
+
+  const sections = [
+    {
+      title: 'Price & Valuation',
+      items: [
+        { label:'Current Price',    value: val(info.currentPrice,  v=>`${info.currency||''} ${fmtN(v)}`), sub: info.currency||'' },
+        { label:'Market Cap',       value: val(info.marketCap,     fmtB), sub: info.currency||'' },
+        { label:'P/E (Trailing)',   value: val(info.trailingPE,    v=>fmtN(v)), sub:'lower = cheaper', hint:'Price ÷ last 12m earnings. <20 value, 20-30 growth, >40 expensive.' },
+        { label:'P/E (Forward)',    value: val(info.forwardPE,     v=>fmtN(v)), sub:'expected earnings', hint:'If much lower than trailing, growth expected ahead.' },
+        { label:'PEG Ratio',        value: val(info.pegRatio,      v=>v.toFixed(2)), sub:'P/E ÷ growth rate', hint:'<1 = undervalued for growth. >2 = expensive. Best for growth stocks.' },
+        { label:'Price / Book',     value: val(info.priceToBook,   v=>v.toFixed(2)), sub:'assets backing', hint:'<1 = below book value. >3 = premium. High P/B only ok if ROE is high.' },
+        { label:'52-Week High',     value: val(info.fiftyTwoWeekHigh, v=>fmtN(v)), sub: info.currency||'' },
+        { label:'52-Week Low',      value: val(info.fiftyTwoWeekLow,  v=>fmtN(v)), sub: info.currency||'' },
+        { label:'Analyst Target',   value: val(info.targetMeanPrice,  v=>`${info.currency||''} ${fmtN(v)}`), sub:`H: ${val(info.targetHighPrice,v=>fmtN(v))}  L: ${val(info.targetLowPrice,v=>fmtN(v))}`, hint:'Mean of analyst price targets. Not a guarantee — treat as directional.' },
+        { label:'Recommendation',   value: recBadge, sub: info.numberOfAnalystOpinions ? `${info.numberOfAnalystOpinions} analysts` : '' },
+      ]
+    },
+    {
+      title: 'Profitability & Growth',
+      items: [
+        { label:'EPS (TTM)',        value: val(info.trailingEps,   v=>fmtN(v)), sub: info.currency||'', hint:'Earnings per share — last 12 months. Must be positive.' },
+        { label:'Revenue (TTM)',    value: val(info.totalRevenue,  fmtB), sub: info.currency||'' },
+        { label:'Revenue Growth',   value: val(info.revenueGrowth, fmtP), sub:'YoY', hint:'>10% consistently is strong. Slowing growth is a warning sign.' },
+        { label:'Earnings Growth',  value: val(info.earningsGrowth,fmtP), sub:'YoY', hint:'Earnings growing faster than revenue = improving margins.' },
+        { label:'Profit Margin',    value: val(info.profitMargins, fmtP), sub:'net', hint:'Higher = more money kept per CHF of sales. >15% is healthy.' },
+        { label:'Return on Equity', value: val(info.returnOnEquity,fmtP), sub:'TTM', hint:'>15% means management uses your money well. Buffett loves high ROE.' },
+        { label:'Return on Assets', value: val(info.returnOnAssets,fmtP), sub:'TTM', hint:'>10% is strong. Banks and capital-heavy industries naturally lower.' },
+      ]
+    },
+    {
+      title: 'Financial Health',
+      items: [
+        { label:'Debt / Equity',    value: val(info.debtToEquity,  v=>v.toFixed(1)), sub:'ratio', hint:'<1 = more equity than debt (safe). >2 = high leverage. >3 = risky.' },
+        { label:'Free Cash Flow',   value: val(info.freeCashflow,  fmtCash), sub: info.currency||'', hint:'Cash left after running the business. Must be positive. This is real money.' },
+        { label:'Total Cash',       value: val(info.totalCash,     fmtB), sub: info.currency||'' },
+        { label:'Total Debt',       value: val(info.totalDebt,     fmtB), sub: info.currency||'' },
+        { label:'Beta',             value: val(info.beta,          v=>v.toFixed(2)), sub:'vs market', hint:'<1 = calmer than market. >1.5 = very volatile. >2 = high risk.' },
+      ]
+    },
+    {
+      title: 'Dividends',
+      items: [
+        { label:'Dividend Yield',   value: val(info.dividendYield, fmtP), sub:'annual', hint:'2-4% sustainable. >6% — check if payout ratio is safe.' },
+        { label:'Dividend Rate',    value: val(info.dividendRate,  v=>`${info.currency||''} ${fmtN(v)}`), sub:'per share/year' },
+        { label:'Payout Ratio',     value: val(info.payoutRatio,   fmtP), sub:'of earnings paid', hint:'<60% = sustainable. 60-80% = watch. >80% = dividend may be cut.' },
+        { label:'Ex-Dividend Date', value: val(info.exDividendDate,v=>new Date(v*1000).toLocaleDateString()), sub:'' },
+      ]
+    },
   ];
 
-  const ratioCards = ratios.map(r =>
-    `<div class="t7card">
-       <div class="label">${r.label}</div>
-       <div class="value">${r.value}</div>
-       ${r.sub ? `<div class="sub">${r.sub}</div>` : ''}
-     </div>`
-  ).join('');
+  const ratioCards = sections.map(sec => `
+    <div style="margin-bottom:20px">
+      <div style="font-size:11px;color:#556;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;border-bottom:1px solid #1e2a45;padding-bottom:6px">${sec.title}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px">
+        ${sec.items.map(r => `
+          <div class="t7card" ${r.hint ? `title="${r.hint}"` : ''} style="${r.hint?'cursor:help':''}">
+            <div class="label">${r.label}${r.hint ? ' ⓘ' : ''}</div>
+            <div class="value">${r.value}</div>
+            ${r.sub ? `<div class="sub">${r.sub}</div>` : ''}
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
 
   // ── Company meta row ──
   const meta = [
@@ -1999,9 +2346,7 @@ function renderAssetInfo(d) {
       <div style="font-size:11px;color:#556">${esc(meta)}</div>
     </div>
     ${descHtml}
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:24px">
-      ${ratioCards}
-    </div>
+    <div style="margin-bottom:24px">${ratioCards}</div>
     <div style="font-size:11px;color:#556;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Price History (${info.currency || ''})</div>
     ${chartHtml}`;
 }
