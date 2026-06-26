@@ -5,3 +5,4 @@ Account.csv
 *.jpeg
 *.pyc
 __pycache__/
+win_certs.pem

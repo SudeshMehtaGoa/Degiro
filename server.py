@@ -4,10 +4,23 @@ Run: python server.py   OR double-click start.bat
 
 Requires:  pip install yfinance
 """
+import sys
+import os
+
+sys.stdout.reconfigure(encoding='utf-8')   # Windows cp1252 fix — allow → ✓ … in print()
+
+# On Windows, Python / curl_cffi don't use the Windows certificate store by default.
+# Export Windows trusted root CAs to a PEM file next to this script, then point
+# both the standard ssl module and curl_cffi (used by yfinance 1.4+) at it.
+_WIN_CERTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'win_certs.pem')
+if os.path.exists(_WIN_CERTS):
+    os.environ.setdefault('SSL_CERT_FILE',   _WIN_CERTS)
+    os.environ.setdefault('CURL_CA_BUNDLE',  _WIN_CERTS)
+    os.environ.setdefault('REQUESTS_CA_BUNDLE', _WIN_CERTS)
+
 import http.server
 import socketserver
 import webbrowser
-import os
 import json
 import urllib.parse
 import time
@@ -43,11 +56,11 @@ def isin_to_symbol(isin):
     # Use hardcoded override if Yahoo search can't find it
     if isin in ISIN_OVERRIDES:
         sym = ISIN_OVERRIDES[isin]
-        print(f'  [search] {isin} → {sym} (override)')
+        print(f'  [search] {isin} →{sym} (override)')
         return sym
     try:
         results = yf.Search(isin, max_results=10).quotes
-        print(f'  [search] {isin} → {[q.get("symbol") + "(" + q.get("quoteType","?") + ")" for q in results]}')
+        print(f'  [search] {isin} →{[q.get("symbol") + "(" + q.get("quoteType","?") + ")" for q in results]}')
         for q in results:
             if q.get('quoteType', '').upper() in ('EQUITY', 'ETF', 'MUTUALFUND'):
                 return q['symbol']
@@ -87,7 +100,7 @@ def fetch_fx():
 def to_chf(price, currency, fx):
     if currency == 'CHF':
         return price
-    if currency == 'GBX':           # pence → GBP → CHF
+    if currency == 'GBX':           # pence →GBP →CHF
         return price / 100 * fx.get('GBP', 1.12)
     rate = fx.get(currency)
     return price * rate if rate else None
@@ -143,12 +156,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     sym = isin_to_symbol(isin)
                     if not sym:
                         entry = {'error': 'symbol not found'}
-                        print(f'  {isin} → NOT FOUND')
+                        print(f'  {isin} →NOT FOUND')
                     else:
                         price, ccy = fetch_price(sym)
                         if price is None:
                             entry = {'error': f'no price returned for {sym}'}
-                            print(f'  {isin} → {sym}: no price')
+                            print(f'  {isin} →{sym}: no price')
                         else:
                             p_chf = to_chf(price, ccy, fx)
                             entry = {
@@ -157,7 +170,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                                 'currency': ccy,
                                 'priceChf': round(p_chf, 4) if p_chf else None,
                             }
-                            print(f'  {isin} → {sym}: {price:.2f} {ccy} = CHF {p_chf:.2f}')
+                            print(f'  {isin} →{sym}: {price:.2f} {ccy} = CHF {p_chf:.2f}')
 
                     result[isin]       = entry
                     _price_cache[isin] = entry
@@ -214,7 +227,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     'startDate'  : start_dt.strftime('%Y-%m-%d'),
                     'endDate'    : end_dt.strftime('%Y-%m-%d'),
                 }
-                print(f'  {symbol}: {start_price:.2f} → {end_price:.2f}  CAGR={cagr*100:.2f}%')
+                print(f'  {symbol}: {start_price:.2f} →{end_price:.2f}  CAGR={cagr*100:.2f}%')
             except Exception as e:
                 result[symbol] = {'name': name, 'error': str(e)}
                 print(f'  {symbol}: ERROR {e}')
@@ -286,10 +299,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         'dates'   : [d.strftime('%Y-%m-%d') for d in hist.index],
                         'prices'  : [round(float(p), 4) for p in hist['Close']],
                     }
-                    print(f'  {isin} → {sym} ({ccy}): {len(hist)} weeks')
+                    print(f'  {isin} →{sym} ({ccy}): {len(hist)} weeks')
             except Exception as e:
                 result['stocks'][isin] = {'error': str(e), 'symbol': sym}
-                print(f'  {isin} → {sym}: ERROR {e}')
+                print(f'  {isin} →{sym}: ERROR {e}')
 
         _history_cache    = result
         _history_cache_ts = now
@@ -320,7 +333,7 @@ if __name__ == '__main__':
         raise SystemExit(1)
 
     url = f'http://localhost:{PORT}/dashboard.html'
-    print(f'DEGIRO Dashboard  ->  {url}')
+    print(f'DEGIRO Dashboard  →  {url}')
     print('Press Ctrl+C to stop.\n')
     webbrowser.open(url)
     with httpd:
