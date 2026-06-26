@@ -122,6 +122,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.handle_benchmark()
         elif self.path.startswith('/history'):
             self.handle_history()
+        elif self.path.startswith('/assetinfo'):
+            self.handle_assetinfo()
         else:
             super().do_GET()
 
@@ -233,6 +235,80 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 print(f'  {symbol}: ERROR {e}')
 
         self._json(result, 200)
+
+    def handle_assetinfo(self):
+        if yf is None:
+            self._json({'error': 'yfinance not installed'}, 503)
+            return
+
+        parsed = urllib.parse.urlparse(self.path)
+        params = urllib.parse.parse_qs(parsed.query)
+        isin   = params.get('isin',   [''])[0].strip()
+        period = params.get('period', ['1mo'])[0].strip()
+
+        if not isin:
+            self._json({'error': 'missing isin= parameter'}, 400)
+            return
+
+        # Validate period
+        valid_periods = {'1mo','3mo','6mo','1y','5y'}
+        if period not in valid_periods:
+            period = '1mo'
+
+        print(f'\n[assetinfo] {isin}  period={period}')
+
+        sym = isin_to_symbol(isin)
+        if not sym:
+            self._json({'error': f'Could not resolve ISIN {isin} to a ticker'}, 404)
+            return
+
+        try:
+            ticker = yf.Ticker(sym)
+
+            # Key ratios and company info
+            info = {}
+            try:
+                raw = ticker.info
+                keep = [
+                    'symbol','shortName','longName','longBusinessSummary',
+                    'sector','industry','country','exchange','currency',
+                    'currentPrice','previousClose','open',
+                    'marketCap','enterpriseValue',
+                    'trailingPE','forwardPE','trailingEps','forwardEps',
+                    'priceToBook','priceToSalesTrailing12Months',
+                    'dividendYield','dividendRate','payoutRatio','exDividendDate',
+                    'fiftyTwoWeekHigh','fiftyTwoWeekLow',
+                    'fiftyDayAverage','twoHundredDayAverage',
+                    'beta','volume','averageVolume',
+                    'totalRevenue','grossMargins','operatingMargins','profitMargins',
+                    'returnOnEquity','returnOnAssets','debtToEquity',
+                    'totalCash','totalDebt','freeCashflow',
+                    'earningsGrowth','revenueGrowth',
+                    'recommendationKey','targetMeanPrice',
+                ]
+                info = {k: raw.get(k) for k in keep}
+                print(f'  {isin} → {sym}: info fetched OK')
+            except Exception as e:
+                print(f'  {isin} → {sym}: info error: {e}')
+
+            # Price history
+            history = {'dates': [], 'prices': []}
+            try:
+                # Use daily for ≤1y, weekly for 5y
+                interval = '1wk' if period == '5y' else '1d'
+                hist = ticker.history(period=period, interval=interval)
+                if not hist.empty:
+                    history['dates']  = [d.strftime('%Y-%m-%d') for d in hist.index]
+                    history['prices'] = [round(float(p), 4) for p in hist['Close']]
+                    print(f'  {isin} → {sym}: {len(hist)} {interval} bars ({period})')
+            except Exception as e:
+                print(f'  {isin} → {sym}: history error: {e}')
+
+            self._json({'symbol': sym, 'info': info, 'history': history}, 200)
+
+        except Exception as e:
+            print(f'  [assetinfo] {isin}: {e}')
+            self._json({'error': str(e)}, 500)
 
     def handle_history(self):
         global _history_cache, _history_cache_ts
