@@ -2344,6 +2344,94 @@ function renderAssetInfo(d) {
   // ── Price history chart ──
   const chartHtml = renderAssetChart(hist, info.currency || '');
 
+  // ── Ratio scorecard table ──
+  // Each row: [label, description, actualValue, displayValue, scorer fn → 'good'|'caution'|'danger'|null]
+  const pct2 = v => v != null ? (v*100).toFixed(2)+'%' : null;
+  const n2   = v => v != null ? fmtN(v) : null;
+
+  const scoreRows = [
+    { label:'P/E (Trailing)',  desc:'How much you pay per CHF of earnings',
+      raw: info.trailingPE,   disp: n2(info.trailingPE),
+      score: v => v < 20 ? 'good' : v <= 35 ? 'caution' : 'danger',
+      good:'< 20', caution:'20 – 35', danger:'> 40' },
+    { label:'P/E (Forward)',   desc:'Based on expected future earnings',
+      raw: info.forwardPE,    disp: n2(info.forwardPE),
+      score: v => v < 18 ? 'good' : v <= 30 ? 'caution' : 'danger',
+      good:'< 18', caution:'18 – 30', danger:'> 35' },
+    { label:'PEG Ratio',       desc:'P/E adjusted for growth rate',
+      raw: info.pegRatio,     disp: info.pegRatio != null ? info.pegRatio.toFixed(2) : null,
+      score: v => v < 1 ? 'good' : v <= 2 ? 'caution' : 'danger',
+      good:'< 1', caution:'1 – 2', danger:'> 2' },
+    { label:'Price / Book',    desc:'Price vs net assets',
+      raw: info.priceToBook,  disp: info.priceToBook != null ? info.priceToBook.toFixed(2) : null,
+      score: v => v < 1.5 ? 'good' : v <= 3 ? 'caution' : 'danger',
+      good:'< 1.5', caution:'1.5 – 3', danger:'> 5' },
+    { label:'Debt / Equity',   desc:'Borrowed money vs own money',
+      raw: info.debtToEquity, disp: info.debtToEquity != null ? info.debtToEquity.toFixed(1) : null,
+      score: v => v < 100 ? 'good' : v <= 200 ? 'caution' : 'danger', // yfinance returns as %, so 100 = D/E of 1
+      good:'< 1', caution:'1 – 2', danger:'> 3' },
+    { label:'ROE',             desc:'Return on shareholder equity',
+      raw: info.returnOnEquity, disp: pct2(info.returnOnEquity),
+      score: v => v > 0.15 ? 'good' : v >= 0.08 ? 'caution' : 'danger',
+      good:'> 15%', caution:'8 – 15%', danger:'< 8%' },
+    { label:'Profit Margin',   desc:'Net income as % of revenue',
+      raw: info.profitMargins,  disp: pct2(info.profitMargins),
+      score: v => v > 0.15 ? 'good' : v >= 0.05 ? 'caution' : 'danger',
+      good:'> 15%', caution:'5 – 15%', danger:'< 5%' },
+    { label:'Dividend Yield',  desc:'Annual dividend ÷ share price',
+      raw: info.dividendYield,  disp: pct2(info.dividendYield),
+      score: v => (v >= 0.02 && v <= 0.04) ? 'good' : v <= 0.06 ? 'caution' : 'danger',
+      good:'2 – 4%', caution:'4 – 6%', danger:'> 8%' },
+    { label:'Payout Ratio',    desc:'% of earnings paid as dividend',
+      raw: info.payoutRatio,    disp: pct2(info.payoutRatio),
+      score: v => v < 0.60 ? 'good' : v <= 0.80 ? 'caution' : 'danger',
+      good:'< 60%', caution:'60 – 80%', danger:'> 80%' },
+    { label:'Beta',            desc:'Volatility vs the market',
+      raw: info.beta,           disp: info.beta != null ? info.beta.toFixed(2) : null,
+      score: v => v < 1 ? 'good' : v <= 1.5 ? 'caution' : 'danger',
+      good:'< 1', caution:'1 – 1.5', danger:'> 2' },
+    { label:'Free Cash Flow',  desc:'Real cash generated after capex',
+      raw: info.freeCashflow,   disp: info.freeCashflow != null ? (info.freeCashflow >= 0 ? '+' : '') + fmtB(info.freeCashflow) : null,
+      score: v => v > 0 ? 'good' : 'danger',
+      good:'Positive & growing', caution:'Positive, flat', danger:'Negative' },
+  ];
+
+  const scoreColor = { good: '#4caf50', caution: '#ff9800', danger: '#e94560' };
+  const scoreBg    = { good: '#0a2010', caution: '#2a1a00', danger: '#2a0a0a' };
+
+  const scorecardHtml = `
+    <div style="margin-bottom:24px">
+      <div style="font-size:11px;color:#556;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-bottom:1px solid #1e2a45;padding-bottom:6px">Ratio Scorecard</div>
+      <table class="ir-table" style="font-size:12px">
+        <thead>
+          <tr>
+            <th style="width:130px">Ratio</th>
+            <th>What it measures</th>
+            <th style="width:110px;text-align:center">Your Value</th>
+            <th style="width:120px;text-align:center;color:#4caf50">✓ Good</th>
+            <th style="width:120px;text-align:center;color:#ff9800">⚠ Caution</th>
+            <th style="width:100px;text-align:center;color:#e94560">✕ Danger</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${scoreRows.map(r => {
+            const s = r.raw != null ? r.score(r.raw) : null;
+            const col = s ? scoreColor[s] : '#444';
+            const bg  = s ? scoreBg[s]   : '';
+            const dispVal = r.disp ?? '—';
+            return `<tr style="border-bottom:1px solid #111827">
+              <td style="font-weight:600;color:#e0e0e0">${r.label}</td>
+              <td style="color:#888">${r.desc}</td>
+              <td style="text-align:center;background:${bg};color:${col};font-weight:700;font-size:13px;border-radius:4px">${dispVal}</td>
+              <td style="text-align:center;color:#4caf50;font-size:11px">${r.good}</td>
+              <td style="text-align:center;color:#ff9800;font-size:11px">${r.caution}</td>
+              <td style="text-align:center;color:#e94560;font-size:11px">${r.danger}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
   el.innerHTML = `
     <div style="margin-bottom:16px">
       <div style="font-size:18px;font-weight:700;color:#e0e0e0;margin-bottom:4px">${esc(info.longName || info.shortName || d.symbol || '')}</div>
@@ -2351,6 +2439,7 @@ function renderAssetInfo(d) {
     </div>
     ${descHtml}
     <div style="margin-bottom:24px">${ratioCards}</div>
+    ${scorecardHtml}
     <div style="font-size:11px;color:#556;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Price History (${info.currency || ''})</div>
     ${chartHtml}`;
 }
