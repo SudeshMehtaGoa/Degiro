@@ -272,9 +272,13 @@ That's it. No code changes, no imports, no configuration.
 
 ## Ratio Scorecard Notes
 
-- **Debt/Equity** — yfinance returns this value multiplied by 100 (percentage form). The dashboard divides by 100 before displaying so the number matches standard D/E ratios (e.g. Tesla shows 0.19, not 18.7). The colour thresholds (green < 1, caution 1–2, danger > 3) use standard D/E.
-- **ROE, Profit Margin, Dividend Yield** — yfinance returns these as decimals (0.049 = 4.9%). Displayed as percentages.
-- **Payout Ratio** — shown as 0.00% for companies that pay no dividend. Treat as N/A in that case.
+**yfinance data quirks handled automatically:**
+
+- **Debt/Equity** — yfinance returns D/E multiplied by 100 (e.g. 18.7 = actual D/E of 0.187). The dashboard divides by 100 before displaying so the number matches standard D/E ratios. Thresholds (green < 1, caution 1–2, danger > 3) use standard D/E.
+- **Dividend Yield (Swiss stocks)** — yfinance returns `dividendYield` as a decimal for US stocks (0.034 = 3.4%) but as a percentage for some Swiss stocks like NOVN.SW (2.94 = already 2.94%). The dashboard detects which form it is (if > 1, already a percentage) and normalises before display.
+- **Dividend Yield (bad data)** — for some tickers (e.g. NVDA), yfinance returns a nonsense `dividendYield` value (e.g. 0.51 = 51%). The server discards any `dividendYield` > 20% as bad data and returns `null` instead, so the dashboard shows "—".
+- **ROE, Profit Margin, Payout Ratio** — yfinance returns these as decimals (0.049 = 4.9%). Displayed as percentages.
+- **Payout Ratio** — shown as 0.00% for companies that pay no dividend (e.g. Tesla). Treat as N/A in that case.
 
 ---
 
