@@ -297,6 +297,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     'beta3Year',
                 ]
                 info = {k: raw.get(k) for k in keep}
+                # yfinance occasionally returns dividendYield > 0.20 (e.g. 0.51 for NVDA) — bad data
+                if info.get('dividendYield') is not None and info['dividendYield'] > 0.20:
+                    info['dividendYield'] = None
                 print(f'  {isin} → {sym} ({info.get("quoteType","?")}): info fetched OK')
             except Exception as e:
                 print(f'  {isin} → {sym}: info error: {e}')
