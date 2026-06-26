@@ -270,33 +270,67 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             try:
                 raw = ticker.info
                 keep = [
-                    'symbol','shortName','longName','longBusinessSummary',
+                    # Common
+                    'symbol','shortName','longName','longBusinessSummary','quoteType',
                     'sector','industry','country','exchange','currency',
                     'currentPrice','previousClose','open',
+                    'fiftyTwoWeekHigh','fiftyTwoWeekLow',
+                    'fiftyDayAverage','twoHundredDayAverage',
+                    'volume','averageVolume',
+                    # Stock-specific
                     'marketCap','enterpriseValue',
                     'trailingPE','forwardPE','trailingEps','forwardEps',
                     'priceToBook','priceToSalesTrailing12Months',
                     'dividendYield','dividendRate','payoutRatio','exDividendDate',
-                    'fiftyTwoWeekHigh','fiftyTwoWeekLow',
-                    'fiftyDayAverage','twoHundredDayAverage',
-                    'beta','volume','averageVolume',
-                    'totalRevenue','grossMargins','operatingMargins','profitMargins',
+                    'beta','totalRevenue','grossMargins','operatingMargins','profitMargins',
                     'returnOnEquity','returnOnAssets','debtToEquity',
                     'totalCash','totalDebt','freeCashflow',
-                    'earningsGrowth','revenueGrowth',
-                    'pegRatio',
+                    'earningsGrowth','revenueGrowth','pegRatio',
                     'recommendationKey','targetMeanPrice','targetHighPrice','targetLowPrice',
                     'numberOfAnalystOpinions',
+                    # ETF-specific
+                    'fundFamily','legalType','category','fundInceptionDate',
+                    'totalAssets','navPrice',
+                    'expenseRatio','annualReportExpenseRatio',
+                    'yield','trailingAnnualDividendYield','trailingAnnualDividendRate',
+                    'ytdReturn','threeYearAverageReturn','fiveYearAverageReturn',
+                    'beta3Year',
                 ]
                 info = {k: raw.get(k) for k in keep}
-                print(f'  {isin} → {sym}: info fetched OK')
+                print(f'  {isin} → {sym} ({info.get("quoteType","?")}): info fetched OK')
             except Exception as e:
                 print(f'  {isin} → {sym}: info error: {e}')
+
+            # ETF-specific: top holdings, sector weights, asset allocation
+            etf_data = {}
+            if info.get('quoteType') in ('ETF', 'MUTUALFUND'):
+                try:
+                    fd = ticker.funds_data
+                    # Top holdings
+                    th = fd.top_holdings
+                    if th is not None and not th.empty:
+                        th = th.reset_index()
+                        etf_data['topHoldings'] = [
+                            {'symbol': str(r.get('Symbol','')),
+                             'name':   str(r.get('Name','')),
+                             'pct':    round(float(r.get('Holding Percent', 0)) * 100, 2)}
+                            for _, r in th.iterrows()
+                        ]
+                    # Sector weights
+                    sw = fd.sector_weightings
+                    if sw:
+                        etf_data['sectorWeights'] = {k: round(v*100, 2) for k,v in sw.items() if v}
+                    # Asset allocation
+                    ac = fd.asset_classes
+                    if ac:
+                        etf_data['assetClasses'] = {k: round(v*100, 2) for k,v in ac.items() if v}
+                    print(f'  {sym}: ETF funds_data fetched OK — {len(etf_data.get("topHoldings",[]))} holdings')
+                except Exception as e:
+                    print(f'  {sym}: funds_data error: {e}')
 
             # Price history
             history = {'dates': [], 'prices': []}
             try:
-                # Use daily for ≤1y, weekly for 5y
                 interval = '1wk' if period == '5y' else '1d'
                 hist = ticker.history(period=period, interval=interval)
                 if not hist.empty:
@@ -306,7 +340,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 print(f'  {isin} → {sym}: history error: {e}')
 
-            self._json({'symbol': sym, 'info': info, 'history': history}, 200)
+            self._json({'symbol': sym, 'info': info, 'etf': etf_data, 'history': history}, 200)
 
         except Exception as e:
             print(f'  [assetinfo] {isin}: {e}')

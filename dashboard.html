@@ -2239,7 +2239,11 @@ async function loadAssetInfo() {
 function renderAssetInfo(d) {
   const info = d.info || {};
   const hist = d.history || {};
+  const etf  = d.etf  || {};
   const el   = document.getElementById('t7content');
+
+  const isETF = (info.quoteType === 'ETF' || info.quoteType === 'MUTUALFUND');
+  if (isETF) { renderETFInfo(d); return; }
 
   // ── helpers ──
   const val  = (v, fmt) => (v != null && v !== 'N/A') ? (fmt ? fmt(v) : v) : '—';
@@ -2360,6 +2364,151 @@ function t7ToggleDesc() {
   } else {
     box.style.maxHeight = 'none'; fade.style.display = 'none'; btn.textContent = 'Show less ▲';
   }
+}
+
+function renderETFInfo(d) {
+  const info = d.info || {};
+  const hist = d.history || {};
+  const etf  = d.etf  || {};
+  const el   = document.getElementById('t7content');
+
+  const val  = (v, fmt) => (v != null && v !== 'N/A') ? (fmt ? fmt(v) : v) : '—';
+  const fmtB = v => Math.abs(v) >= 1e9 ? (v/1e9).toFixed(2)+'B' : Math.abs(v) >= 1e6 ? (v/1e6).toFixed(2)+'M' : fmtN(v);
+  const fmtP = v => v != null ? (v*100).toFixed(2)+'%' : '—';
+  const fmtR = v => v != null ? ((v >= 0 ? '+' : '') + (v*100).toFixed(2) + '%') : '—';
+  const rCol = v => v == null ? '' : v >= 0 ? 'color:#4caf50' : 'color:#e94560';
+
+  // ── fund meta ──
+  const inception = info.fundInceptionDate
+    ? new Date(info.fundInceptionDate * 1000).toLocaleDateString('en-GB', {year:'numeric',month:'short',day:'numeric'})
+    : '—';
+  const ter = info.expenseRatio ?? info.annualReportExpenseRatio;
+  const meta = [info.fundFamily, info.legalType, info.category, info.exchange].filter(Boolean).join('  ·  ');
+
+  // ── overview cards ──
+  const overviewCards = [
+    { label:'NAV Price',       value: val(info.navPrice,   v=>`${info.currency||''} ${fmtN(v)}`), sub: info.currency||'' },
+    { label:'Total Assets (AUM)', value: val(info.totalAssets, fmtB), sub: info.currency||'', hint:'Assets under management. Below $100M = small fund risk.' },
+    { label:'Expense Ratio (TER)', value: ter != null ? (ter*100).toFixed(3)+'%' : '—', sub:'annual fee', hint:'<0.20% excellent. 0.20-0.50% OK. >0.50% only for niche funds.' },
+    { label:'Dividend Yield',  value: val(info.yield ?? info.trailingAnnualDividendYield, fmtP), sub:'trailing', hint:'Income paid out. Accumulating ETFs reinvest this automatically.' },
+    { label:'52-Week High',    value: val(info.fiftyTwoWeekHigh, v=>fmtN(v)), sub: info.currency||'' },
+    { label:'52-Week Low',     value: val(info.fiftyTwoWeekLow,  v=>fmtN(v)), sub: info.currency||'' },
+    { label:'50-Day Avg',      value: val(info.fiftyDayAverage,  v=>fmtN(v)), sub: info.currency||'' },
+    { label:'200-Day Avg',     value: val(info.twoHundredDayAverage, v=>fmtN(v)), sub: info.currency||'' },
+    { label:'Inception Date',  value: inception, sub:'' },
+    { label:'Beta (3Y)',       value: val(info.beta3Year, v=>v.toFixed(2)), sub:'vs market', hint:'<1 = less volatile than market. ~1 = tracks market closely.' },
+  ].map(r => `<div class="t7card" ${r.hint?`title="${r.hint}" style="cursor:help"`:''}><div class="label">${r.label}${r.hint?' ⓘ':''}</div><div class="value">${r.value}</div>${r.sub?`<div class="sub">${r.sub}</div>`:''}</div>`).join('');
+
+  // ── performance cards ──
+  const perfCards = [
+    { label:'YTD Return',      value: val(info.ytdReturn,              v => `${fmtR(v/100)}`), raw: info.ytdReturn },
+    { label:'3-Year Avg/Year', value: val(info.threeYearAverageReturn, fmtR), raw: info.threeYearAverageReturn },
+    { label:'5-Year Avg/Year', value: val(info.fiveYearAverageReturn,  fmtR), raw: info.fiveYearAverageReturn },
+  ].map(r => `<div class="t7card"><div class="label">${r.label}</div><div class="value" style="${rCol(r.raw)};font-size:18px">${r.value}</div></div>`).join('');
+
+  // ── top holdings table ──
+  const holdings = etf.topHoldings || [];
+  const holdHtml = holdings.length
+    ? `<table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          <th style="text-align:left;padding:7px 10px;background:#0f3460;color:#e0e0e0">Symbol</th>
+          <th style="text-align:left;padding:7px 10px;background:#0f3460;color:#e0e0e0">Name</th>
+          <th style="text-align:right;padding:7px 10px;background:#0f3460;color:#e0e0e0">Weight</th>
+          <th style="padding:7px 10px;background:#0f3460"></th>
+        </tr></thead>
+        <tbody>${holdings.map((h,i) => `
+          <tr style="border-bottom:1px solid #1e2a45;background:${i%2?'#111827':''}">
+            <td style="padding:6px 10px;font-family:monospace;color:#29b6f6">${esc(h.symbol)}</td>
+            <td style="padding:6px 10px;color:#aaa">${esc(h.name)}</td>
+            <td style="padding:6px 10px;text-align:right;color:#e0e0e0;font-weight:600">${h.pct.toFixed(2)}%</td>
+            <td style="padding:6px 10px;width:120px">
+              <div style="height:6px;background:#0f3460;border-radius:3px">
+                <div style="height:6px;width:${Math.min(h.pct/holdings[0].pct*100,100).toFixed(0)}%;background:#29b6f6;border-radius:3px"></div>
+              </div>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`
+    : '<div style="color:#444;font-size:12px">Holdings data not available</div>';
+
+  // ── sector weights chart ──
+  const sectors = etf.sectorWeights || {};
+  const sectorNames = {
+    technology:'Technology', financial_services:'Financials', healthcare:'Healthcare',
+    consumer_cyclical:'Consumer Cyclical', industrials:'Industrials',
+    communication_services:'Communication', consumer_defensive:'Consumer Defensive',
+    energy:'Energy', basic_materials:'Basic Materials', utilities:'Utilities',
+    realestate:'Real Estate'
+  };
+  const sectorColors = {
+    technology:'#29b6f6', financial_services:'#4caf50', healthcare:'#ff9800',
+    consumer_cyclical:'#e94560', industrials:'#ce93d8', communication_services:'#80deea',
+    consumer_defensive:'#a5d6a7', energy:'#ffcc80', basic_materials:'#ef9a9a',
+    utilities:'#b39ddb', realestate:'#f48fb1'
+  };
+  const sortedSectors = Object.entries(sectors).sort((a,b) => b[1]-a[1]);
+  const maxSW = sortedSectors.length ? sortedSectors[0][1] : 1;
+  const sectorHtml = sortedSectors.length
+    ? sortedSectors.map(([k,v]) => `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <div style="width:160px;font-size:11px;color:#aaa;text-align:right;flex-shrink:0">${sectorNames[k]||k}</div>
+          <div style="flex:1;height:16px;background:#0f3460;border-radius:3px;overflow:hidden">
+            <div style="height:16px;width:${(v/maxSW*100).toFixed(1)}%;background:${sectorColors[k]||'#555'};border-radius:3px;transition:width .3s"></div>
+          </div>
+          <div style="width:48px;font-size:12px;color:#e0e0e0;font-weight:600">${v.toFixed(1)}%</div>
+        </div>`).join('')
+    : '<div style="color:#444;font-size:12px">Sector data not available</div>';
+
+  // ── asset allocation ──
+  const ac = etf.assetClasses || {};
+  const acNames = {stockPosition:'Stocks',bondPosition:'Bonds',cashPosition:'Cash',
+                   preferredPosition:'Preferred',convertiblePosition:'Convertibles',otherPosition:'Other'};
+  const acColors = {stockPosition:'#4caf50',bondPosition:'#29b6f6',cashPosition:'#ff9800',
+                    preferredPosition:'#ce93d8',convertiblePosition:'#ffcc80',otherPosition:'#888'};
+  const acItems = Object.entries(ac).filter(([,v])=>v>0.05).sort((a,b)=>b[1]-a[1]);
+  const acHtml = acItems.length
+    ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${acItems.map(([k,v])=>`
+          <div style="background:#16213e;border:1px solid #1e2a45;border-radius:6px;padding:10px 16px;text-align:center;min-width:90px">
+            <div style="font-size:20px;font-weight:700;color:${acColors[k]||'#aaa'}">${v.toFixed(1)}%</div>
+            <div style="font-size:11px;color:#556;margin-top:2px">${acNames[k]||k}</div>
+          </div>`).join('')}
+       </div>`
+    : '';
+
+  const chartHtml = renderAssetChart(hist, info.currency || '');
+
+  el.innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="font-size:18px;font-weight:700;color:#e0e0e0;margin-bottom:4px">${esc(info.longName||info.shortName||d.symbol||'')}</div>
+      <div style="font-size:11px;color:#556">${esc(meta)}</div>
+    </div>
+
+    <div style="margin-bottom:20px">
+      <div class="ir-subtitle" style="margin-bottom:10px">Fund Overview</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px">${overviewCards}</div>
+    </div>
+
+    <div style="margin-bottom:20px">
+      <div class="ir-subtitle" style="margin-bottom:10px">Historical Performance</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">${perfCards}</div>
+    </div>
+
+    ${acItems.length ? `<div style="margin-bottom:20px"><div class="ir-subtitle" style="margin-bottom:10px">Asset Allocation</div>${acHtml}</div>` : ''}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+      <div>
+        <div class="ir-subtitle" style="margin-bottom:10px">Top Holdings</div>
+        ${holdHtml}
+      </div>
+      <div>
+        <div class="ir-subtitle" style="margin-bottom:10px">Sector Weights</div>
+        ${sectorHtml}
+      </div>
+    </div>
+
+    <div style="font-size:11px;color:#556;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Price History (${info.currency||''})</div>
+    ${chartHtml}`;
 }
 
 function renderAssetChart(hist, ccy) {

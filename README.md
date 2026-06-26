@@ -14,7 +14,7 @@ A local, self-hosted investment dashboard for DEGIRO brokerage accounts. Drop in
 | **Dividend Summary** | Net dividend received per asset (after tax) |
 | **Returns** | XIRR (annualised return %) per asset and for the full portfolio |
 | **Transactions** | Full raw CSV — sortable, filterable, paginated |
-| **Asset Info** | Company description, 20+ key ratios grouped by category, price history chart (1M/3M/6M/1Y/5Y) |
+| **Asset Info** | Auto-detects stock vs ETF. Stocks: 20+ key ratios in 4 sections. ETFs: AUM, TER, YTD/3Y/5Y returns, top 10 holdings, sector weights chart, asset allocation. Both include price history chart (1M/3M/6M/1Y/5Y) |
 | **Investment Rules** | Personal reference guide — golden rules, stock & ETF checklists, ratio quick reference, portfolio construction, behavioural rules, Switzerland notes |
 
 **Key capabilities:**
