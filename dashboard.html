@@ -568,6 +568,7 @@
         <tr id="p3hr">
           <th data-col="0" style="width:40px">No<span class="si"></span></th>
           <th data-col="1">Asset<span class="si"></span></th>
+          <th data-col="9" style="width:60px;text-align:center">Type<span class="si"></span></th>
           <th data-col="2">ISIN<span class="si"></span></th>
           <th data-col="3" style="text-align:right">Total Units<span class="si"></span></th>
           <th data-col="4" style="text-align:right">Total Invested<span class="si"></span></th>
@@ -1113,6 +1114,9 @@ function buildPortfolio() {
   p3Rows = Object.values(map).sort((a, b) => a.asset.localeCompare(b.asset));
   p3Rows.forEach(r => {
     r.divReceived = divMap[r.isin] || divMap[r.asset] || 0;
+    // Detect ETF from ISIN prefix (IE = Ireland, LU = Luxembourg — almost always ETFs/funds)
+    const prefix = (r.isin || '').substring(0, 2).toUpperCase();
+    r.assetType = (prefix === 'IE' || prefix === 'LU') ? 'ETF' : 'Stock';
   });
   p3Filtered = [...p3Rows];
 
@@ -1139,19 +1143,28 @@ function wirePo3Sort() {
       renderP3Table();
     });
   });
-  document.querySelector('#p3hr th[data-col="1"]').classList.add('sa');
+  p3SortCol = 9; p3SortAsc = true;
+  document.querySelector('#p3hr th[data-col="9"]').classList.add('sa');
 }
 
 function renderP3Table() {
   const numCols = new Set([3, 4, 5, 6, 7, 8]);
   const sorted  = [...p3Filtered].sort((a, b) => {
+    // col 9 = Type; otherwise use normal columns
+    const typeOrder = t => t === 'Stock' ? 0 : 1;
     const va = [null, a.asset, a.isin, a.units, a.totalChf, a.divReceived ?? 0,
-                a.priceChf ?? -Infinity, a.currentVal ?? -Infinity, a.gainLoss ?? -Infinity];
+                a.priceChf ?? -Infinity, a.currentVal ?? -Infinity, a.gainLoss ?? -Infinity, a.assetType];
     const vb = [null, b.asset, b.isin, b.units, b.totalChf, b.divReceived ?? 0,
-                b.priceChf ?? -Infinity, b.currentVal ?? -Infinity, b.gainLoss ?? -Infinity];
-    const cmp = numCols.has(p3SortCol)
-      ? (va[p3SortCol] || 0) - (vb[p3SortCol] || 0)
-      : String(va[p3SortCol]).localeCompare(String(vb[p3SortCol]));
+                b.priceChf ?? -Infinity, b.currentVal ?? -Infinity, b.gainLoss ?? -Infinity, b.assetType];
+    let cmp;
+    if (p3SortCol === 9) {
+      cmp = typeOrder(a.assetType) - typeOrder(b.assetType) || a.asset.localeCompare(b.asset);
+    } else if (numCols.has(p3SortCol)) {
+      cmp = (va[p3SortCol] || 0) - (vb[p3SortCol] || 0);
+    } else {
+      // For name sort (col 1): stocks first within the sort
+      cmp = String(va[p3SortCol]).localeCompare(String(vb[p3SortCol]));
+    }
     return p3SortAsc ? cmp : -cmp;
   });
 
@@ -1170,9 +1183,13 @@ function renderP3Table() {
       ? `<span style="${gainColor};font-weight:600">${gainPrefix}CHF ${fmtN(gain)}</span>`
       : (loading ? '…' : '—');
 
+    const typeBadge = r.assetType === 'ETF'
+      ? `<span style="background:#1a4a2e;color:#4caf50;border:1px solid #4caf50;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:600">ETF</span>`
+      : `<span style="background:#0f2d4a;color:#64b5f6;border:1px solid #64b5f6;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:600">Stock</span>`;
     return `<tr>
       <td style="color:#555">${i + 1}</td>
       <td>${esc(r.asset)}</td>
+      <td style="text-align:center">${typeBadge}</td>
       <td style="font-family:monospace;font-size:11px">${esc(r.isin)}</td>
       <td style="text-align:right">${r.units % 1 === 0 ? r.units : fmtN(r.units)}</td>
       <td style="text-align:right;color:#aaa">CHF ${fmtN(r.totalChf)}</td>
@@ -1191,7 +1208,7 @@ function renderP3Table() {
   const totGain     = totVal + totDiv - p3Rows.reduce((s, r) => s + (r.currentVal != null ? r.totalChf : 0), 0);
   const gainColor   = totGain >= 0 ? '#4caf50' : '#e94560';
   const totRow = `<tr style="background:#0f3460;font-weight:600;border-bottom:2px solid #1a4a80">
-    <td colspan="4" style="padding:8px 10px;color:#aaa">TOTAL</td>
+    <td colspan="5" style="padding:8px 10px;color:#aaa">TOTAL</td>
     <td style="text-align:right;padding:8px 10px;color:#aaa">CHF ${fmtN(totInvested)}</td>
     <td style="text-align:right;padding:8px 10px;color:#4caf50">${totDiv > 0 ? 'CHF ' + fmtN(totDiv) : ''}</td>
     <td style="padding:8px 10px"></td>
