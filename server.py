@@ -45,6 +45,18 @@ ISIN_OVERRIDES = {
 # ── yfinance ─────────────────────────────────────────────
 try:
     import yfinance as yf
+    # curl_cffi 0.15+ ignores CURL_CA_BUNDLE env var — patch the session directly
+    if os.path.exists(_WIN_CERTS):
+        try:
+            from curl_cffi import requests as _cf
+            _orig_session_init = _cf.Session.__init__
+            def _patched_session_init(self, *args, **kwargs):
+                kwargs.setdefault('verify', _WIN_CERTS)
+                _orig_session_init(self, *args, **kwargs)
+            _cf.Session.__init__ = _patched_session_init
+            print(f'curl_cffi session patched with {_WIN_CERTS}')
+        except Exception as _e:
+            print(f'curl_cffi patch skipped: {_e}')
     print('yfinance loaded OK')
 except ImportError:
     yf = None
