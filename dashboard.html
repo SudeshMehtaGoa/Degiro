@@ -786,6 +786,7 @@ function buildTable() {
         </tr>
       </thead>
       <tbody id="tb"></tbody>
+      <tfoot id="t1foot" style="position:sticky;bottom:0;z-index:2;background:#0f3460;font-weight:600;border-top:2px solid #1a4a80"></tfoot>
     </table>`;
 
   // Sort headers
@@ -872,6 +873,24 @@ function renderRows() {
     total + ' rows' + (total !== allRows.length ? ` (filtered from ${allRows.length})` : '');
   document.getElementById('pi').textContent =
     total ? `Showing ${start + 1}–${end} of ${total}` : 'No results';
+
+  // Totals footer — sum Change by currency across ALL filtered rows (not just current page)
+  const ccySums = {};
+  filteredRows.forEach(r => {
+    if (r.chgCcy && r.chgN != null) ccySums[r.chgCcy] = (ccySums[r.chgCcy] || 0) + r.chgN;
+  });
+  const sumHtml = Object.entries(ccySums)
+    .sort((a,b) => a[0].localeCompare(b[0]))
+    .map(([ccy, sum]) => {
+      const color = sum > 0 ? '#4caf50' : sum < 0 ? '#e94560' : '#aaa';
+      return `<span style="color:${color};margin-right:10px">${ccy} ${sum>=0?'+':''}${sum.toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`;
+    }).join('');
+  const foot = document.getElementById('t1foot');
+  if (foot) foot.innerHTML = `<tr>
+    <td colspan="8" style="padding:6px 10px;color:#aaa;font-size:12px">TOTAL (${total} rows)</td>
+    <td style="text-align:right;padding:6px 10px">${sumHtml || '—'}</td>
+    <td colspan="3" style="padding:6px 10px"></td>
+  </tr>`;
 
   renderPagination(total);
 }
