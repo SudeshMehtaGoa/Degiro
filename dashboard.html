@@ -813,8 +813,11 @@ function buildT1Summary() {
     if (d.startsWith('fx debit') && r.chgCcy === 'CHF') invested += Math.abs(n);
     // Direct CHF stock/ETF buys (e.g. Novartis)
     if (d.startsWith('buy ') && r.chgCcy === 'CHF' && !r.fx) invested += Math.abs(n);
-    // DEGIRO fees
-    if (r.dtype === 'fee' && r.chgCcy === 'CHF') fees += Math.abs(n);
+    // DEGIRO fees — all currencies converted to CHF, exclude dividend tax (shown separately)
+    if (r.dtype === 'fee' && !d.includes('dividend tax') && n < 0) {
+      const chf = toChf(Math.abs(n), r.chgCcy, date);
+      if (chf) fees += chf;
+    }
     // Dividend tax (any currency → CHF)
     if (d.includes('dividend tax') && n < 0) {
       const chf = toChf(Math.abs(n), r.chgCcy, date);
