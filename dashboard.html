@@ -478,6 +478,8 @@
   <h2>Transaction History</h2>
   <p class="sub" id="dataSub">Loading Account.csv…</p>
 
+  <div id="t1summary" style="display:none;margin-bottom:20px"></div>
+
   <div class="controls">
     <div><label>Search all columns:&nbsp;</label><input type="text" id="gs" placeholder="Type to search…"></div>
     <div><label>Type:&nbsp;</label>
@@ -671,6 +673,7 @@ function loadCSV() {
       p2Rows = []; p3Rows = []; p4Rows = []; // reset so all tabs rebuild from fresh data
       buildTable();
       applyFilters();
+      buildT1Summary();
       buildPortfolio();
     })
     .catch(err => {
@@ -763,6 +766,96 @@ function dateSpan(rows) {
 }
 
 // ── Build table skeleton once ────────────────────────────
+function buildT1Summary() {
+  const el = document.getElementById('t1summary');
+  if (!el || !allRows.length) return;
+
+  // Build FX rate map (same approach as buildDividends)
+  const fxMap = {};
+  allRows.forEach(r => {
+    if (!r.fx || !parseFloat(r.fx)) return;
+    const rate = parseFloat(r.fx);
+    const date = r.dtd.split(' ')[0];
+    const d = r.desc.toLowerCase();
+    if ((d.startsWith('fx debit') || d.startsWith('fx credit')) && r.chgCcy !== 'CHF')
+      fxMap[date + '|' + r.chgCcy] = rate;
+  });
+  function toChf(amount, ccy, dateStr) {
+    if (ccy === 'CHF') return amount;
+    const key = dateStr + '|' + ccy;
+    let rate = fxMap[key];
+    if (!rate) {
+      const [dd,mm,yyyy] = dateStr.split('-');
+      const t = new Date(+yyyy,+mm-1,+dd).getTime();
+      let bestDiff = 30*86400000;
+      for (const [k,v] of Object.entries(fxMap)) {
+        if (!k.endsWith('|'+ccy)) continue;
+        const [d2,m2,y2] = k.split('|')[0].split('-');
+        const diff = Math.abs(new Date(+y2,+m2-1,+d2).getTime()-t);
+        if (diff < bestDiff) { bestDiff = diff; rate = v; }
+      }
+    }
+    return rate ? amount / rate : null;
+  }
+
+  let deposited=0, withdrawn=0, invested=0, fees=0, taxChf=0, divChf=0, interest=0;
+
+  allRows.forEach(r => {
+    const d = r.desc.toLowerCase();
+    const date = r.dtd.split(' ')[0];
+    const n = r.chgN || 0;
+
+    // Deposits from bank
+    if (r.dtype === 'deposit' && r.chgCcy === 'CHF' && n > 0) deposited += n;
+    // Withdrawals to bank
+    if (r.dtype === 'deposit' && r.chgCcy === 'CHF' && n < 0) withdrawn += Math.abs(n);
+    // FX Debit (CHF leaving for foreign stock purchase)
+    if (d.startsWith('fx debit') && r.chgCcy === 'CHF') invested += Math.abs(n);
+    // Direct CHF stock/ETF buys (e.g. Novartis)
+    if (d.startsWith('buy ') && r.chgCcy === 'CHF' && !r.fx) invested += Math.abs(n);
+    // DEGIRO fees
+    if (r.dtype === 'fee' && r.chgCcy === 'CHF') fees += Math.abs(n);
+    // Dividend tax (any currency → CHF)
+    if (d.includes('dividend tax') && n < 0) {
+      const chf = toChf(Math.abs(n), r.chgCcy, date);
+      if (chf) taxChf += chf;
+    }
+    // Dividends received (any currency → CHF)
+    if (r.dtype === 'dividend' && !d.includes('tax') && n > 0) {
+      const chf = toChf(n, r.chgCcy, date);
+      if (chf) divChf += chf;
+    }
+    // Interest income
+    if (d.includes('interest income') && r.chgCcy === 'CHF' && n > 0) interest += n;
+  });
+
+  // Current portfolio value from p3Rows (if loaded)
+  const portfolioVal = p3Rows.reduce((s,r) => s + (r.currentVal||0), 0);
+  const pnl = portfolioVal ? portfolioVal - invested : null;
+
+  function card(label, value, color, hint) {
+    return `<div style="background:#16213e;border:1px solid #0f3460;border-radius:8px;padding:14px 18px;min-width:170px;flex:1">
+      <div style="font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">${label}</div>
+      <div style="font-size:18px;font-weight:700;color:${color||'#e0e0e0'}">CHF ${fmtN(value)}</div>
+      ${hint ? `<div style="font-size:10px;color:#555;margin-top:3px">${hint}</div>` : ''}
+    </div>`;
+  }
+
+  el.innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:6px">
+      ${card('Transferred In', deposited, '#64b5f6', 'deposits from bank')}
+      ${card('Transferred Out', withdrawn, withdrawn>0?'#e94560':'#888', 'withdrawn to bank')}
+      ${card('Total Invested', invested, '#e0e0e0', 'stocks + ETFs in CHF')}
+      ${card('Fees Paid', fees, '#e94560', 'DEGIRO transaction fees')}
+      ${card('Tax Paid', taxChf, '#e94560', 'withholding tax on dividends')}
+      ${card('Dividends Received', divChf, '#4caf50', 'net after tax, approx CHF')}
+      ${interest > 0 ? card('Interest Income', interest, '#4caf50', 'Flatex interest') : ''}
+      ${portfolioVal > 0 ? card('Current Portfolio Value', portfolioVal, '#4caf50', 'live prices — open Portfolio tab first') : ''}
+      ${pnl != null ? card('Total P&L', pnl, pnl>=0?'#4caf50':'#e94560', (pnl>=0?'+':'')+((pnl/invested)*100).toFixed(1)+'% on invested') : ''}
+    </div>`;
+  el.style.display = 'block';
+}
+
 function buildTable() {
   document.getElementById('tableWrap').innerHTML = `
     <table id="tx">
@@ -1297,6 +1390,7 @@ async function fetchLivePrices() {
   }
 
   renderP3Table();
+  buildT1Summary(); // refresh P&L and portfolio value in summary panel
 }
 
 // ═══════════════════════════════════════════════════════════
