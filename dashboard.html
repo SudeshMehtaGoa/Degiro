@@ -161,6 +161,7 @@
           <th data-col="7" style="text-align:right">Dividends<span class="si"></span></th>
           <th data-col="8" style="text-align:right">Current Value<span class="si"></span></th>
           <th data-col="9" style="text-align:right">Total Return<span class="si"></span></th>
+          <th data-col="10" style="text-align:right">Return %<span class="si"></span></th>
         </tr>
       </thead>
       <tbody id="p6body"></tbody>
@@ -2101,12 +2102,13 @@ function renderReturnsTable() {
     document.getElementById('p6gs')._wired = true;
   }
 
-  const numCols = new Set([2, 5, 6, 7, 8, 9]);
+  const numCols = new Set([2, 5, 6, 7, 8, 9, 10]);
+  const retPct = r => r.currentVal != null ? ((r.currentVal + r.divReceived - r.totalChf) / r.totalChf) : -Infinity;
   const sorted  = [...p6Filtered].sort((a, b) => {
     const va = [null, a.asset, a.xirrVal ?? -Infinity, a.isin, a.firstDate?.getTime() ?? 0, a.units, a.totalChf,
-                a.divReceived, a.currentVal ?? -Infinity, (a.currentVal??0)+a.divReceived-a.totalChf];
+                a.divReceived, a.currentVal ?? -Infinity, (a.currentVal??0)+a.divReceived-a.totalChf, retPct(a)];
     const vb = [null, b.asset, b.xirrVal ?? -Infinity, b.isin, b.firstDate?.getTime() ?? 0, b.units, b.totalChf,
-                b.divReceived, b.currentVal ?? -Infinity, (b.currentVal??0)+b.divReceived-b.totalChf];
+                b.divReceived, b.currentVal ?? -Infinity, (b.currentVal??0)+b.divReceived-b.totalChf, retPct(b)];
     const cmp = numCols.has(p6SortCol)
       ? (va[p6SortCol] || 0) - (vb[p6SortCol] || 0)
       : String(va[p6SortCol]).localeCompare(String(vb[p6SortCol]));
@@ -2145,6 +2147,7 @@ function renderReturnsTable() {
     <td style="text-align:right;padding:8px 10px;color:#4caf50">${totDiv > 0 ? 'CHF ' + fmtN(totDiv) : ''}</td>
     <td style="text-align:right;padding:8px 10px">CHF ${fmtN(totVal)}</td>
     <td style="text-align:right;padding:8px 10px"><span style="color:${totColor}">${totReturn>=0?'+':''}CHF ${fmtN(totReturn)}</span></td>
+    <td style="text-align:right;padding:8px 10px"><span style="color:${totColor};font-weight:700">${totReturn>=0?'+':''}${((totReturn/p6Rows.filter(r=>r.currentVal!=null).reduce((s,r)=>s+r.totalChf,0))*100).toFixed(2)}%</span></td>
   </tr>`;
 
   const rows = sorted.map((r, i) => {
@@ -2180,6 +2183,7 @@ function renderReturnsTable() {
       <td style="text-align:right;color:#4caf50">${r.divReceived > 0 ? 'CHF ' + fmtN(r.divReceived) : '—'}</td>
       <td style="text-align:right;font-weight:600">${hasVal ? 'CHF ' + fmtN(r.currentVal) : '—'}</td>
       <td style="text-align:right">${hasVal ? `<span style="color:${retColor}">${totalReturn>=0?'+':''}CHF ${fmtN(totalReturn)}</span>` : '—'}</td>
+      <td style="text-align:right">${hasVal ? `<span style="color:${retColor};font-weight:700">${totalReturn>=0?'+':''}${((totalReturn/r.totalChf)*100).toFixed(2)}%</span>` : '—'}</td>
     </tr>`;
   }).join('');
 
