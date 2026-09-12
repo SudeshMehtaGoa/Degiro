@@ -749,6 +749,7 @@ function classify(d) {
   if (/dividend/i.test(d))                               return 'dividend';
   if (/degiro transaction.*fee|third party fee/i.test(d)) return 'fee';
   if (/exchange connection fee/i.test(d))                return 'fee';
+  if (/adr.*fee|pass.through fee/i.test(d))             return 'fee';
   if (/interest/i.test(d))                               return 'interest';
   if (/^fx credit|^fx debit/i.test(d))                   return 'fx';
   if (/deposit/i.test(d))                                return 'deposit';

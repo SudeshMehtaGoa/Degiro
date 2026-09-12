@@ -282,6 +282,26 @@ That's it. No code changes, no imports, no configuration.
 
 ---
 
+## Financial Summary Panel (Transactions Tab)
+
+The panel at the top of the Transactions tab shows 9 key figures, all in CHF:
+
+| Card | What it includes |
+|------|-----------------|
+| **Transferred In** | CHF deposits from bank |
+| **Transferred Out** | CHF withdrawals to bank |
+| **Total Invested** | CHF debited for stock/ETF purchases (FX Debit rows + direct CHF buys) |
+| **Fees Paid** | All DEGIRO fees converted to CHF: transaction fees (CHF) + exchange connection fees (EUR → CHF) + ADR/GDR pass-through fees (USD → CHF). Dividend tax is excluded — shown separately |
+| **Tax Paid** | All withholding tax on dividends converted to CHF (USD + CHF). Reversal/credit rows are excluded so the figure is net |
+| **Dividends Received** | All dividend payments in any currency converted to CHF, after tax |
+| **Interest Income** | Interest credited to account |
+| **Current Portfolio Value** | Live prices × units held (requires Portfolio tab to have loaded prices) |
+| **Total P&L** | Portfolio value + dividends − total invested |
+
+FX conversion uses actual DEGIRO FX rates from the CSV (nearest date within 30 days).
+
+---
+
 ## Known Limitations
 
 - Prices are delayed (Yahoo Finance free tier — typically 15 min delay)
