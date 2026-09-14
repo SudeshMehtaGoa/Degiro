@@ -1248,7 +1248,9 @@ function buildT10() {
     const stockRows = Object.entries(y.divByStock)
       .sort((a,b) => (b[1].net+b[1].tax) - (a[1].net+a[1].tax))
       .map(([stock, v]) => {
-        const gross = v.net + v.tax;
+        // CHF stocks (Novartis): dividend row IS the gross — DEGIRO deducts Verrechnungssteuer from it
+        // USD/EUR stocks: dividend row is net after foreign withholding — add back tax to get gross
+        const gross = v.ccy === 'CHF' ? v.net : v.net + v.tax;
         const isNov = stock.toLowerCase().includes('novartis');
         const action = isNov
           ? '<span style="color:#4caf50">Tick Verrechnungssteuer box → 35% refunded</span>'
