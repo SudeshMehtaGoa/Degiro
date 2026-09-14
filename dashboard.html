@@ -134,6 +134,7 @@
   <div class="tab" data-tab="t7">Asset Info</div>
   <div class="tab" data-tab="t8">Investment Rules</div>
   <div class="tab" data-tab="t9">Swiss Tax Guide</div>
+  <div class="tab" data-tab="t10">Tax by Year</div>
   <span class="meta" id="fileMeta"></span>
 </div>
 
@@ -607,6 +608,13 @@
 
 </div>
 
+<!-- ── Tab 10: Tax by Year ── -->
+<div id="t10" class="tab-content">
+  <h2>Tax by Year</h2>
+  <p class="sub">Your DEGIRO activity broken down by Swiss tax year (Jan–Dec) · Swiss citizen · Opfikon, Zurich · Steuererklärung</p>
+  <div id="t10body"></div>
+</div>
+
 <!-- ── Tab 7: Asset Info ── -->
 <div id="t7" class="tab-content">
   <h2>Asset Info</h2>
@@ -833,6 +841,7 @@ function loadCSV() {
       applyFilters();
       buildT1Summary();
       buildT9Summary();
+      buildT10();
       buildPortfolio();
     })
     .catch(err => {
@@ -1114,6 +1123,207 @@ function buildT9Summary() {
     card('🇨🇭','Novartis Verrechnungssteuer', 'CHF '+fmtN(novTaxChf), '#4caf50', 'declare gross → get 35% refunded') +
     card('🇺🇸','US Withholding (DA-1)', 'CHF '+fmtN(usTaxChf), '#ff9800', 'file DA-1 to offset against Swiss tax') +
     (portfolioVal > 0 ? card('🏛️','Portfolio Value (31 Dec estimate)', 'CHF '+fmtN(portfolioVal), '#e0e0e0', 'declare as wealth (Vermögen)') : '');
+}
+
+function buildT10() {
+  const el = document.getElementById('t10body');
+  if (!el || !allRows.length) return;
+
+  // FX map + toChf (same pattern)
+  const fxMap = {};
+  allRows.forEach(r => {
+    if (!r.fx || !parseFloat(r.fx)) return;
+    const rate = parseFloat(r.fx);
+    const date = r.dtd.split(' ')[0];
+    const d = r.desc.toLowerCase();
+    if ((d.startsWith('fx debit') || d.startsWith('fx credit')) && r.chgCcy !== 'CHF')
+      fxMap[date + '|' + r.chgCcy] = rate;
+  });
+  function toChf(amount, ccy, dateStr) {
+    if (ccy === 'CHF') return amount;
+    const key = dateStr + '|' + ccy;
+    let rate = fxMap[key];
+    if (!rate) {
+      const [dd,mm,yyyy] = dateStr.split('-');
+      const t = new Date(+yyyy,+mm-1,+dd).getTime();
+      let bestDiff = 30*86400000;
+      for (const [k,v] of Object.entries(fxMap)) {
+        if (!k.endsWith('|'+ccy)) continue;
+        const [d2,m2,y2] = k.split('|')[0].split('-');
+        const diff = Math.abs(new Date(+y2,+m2-1,+d2).getTime()-t);
+        if (diff < bestDiff) { bestDiff = diff; rate = v; }
+      }
+    }
+    return rate ? amount / rate : null;
+  }
+
+  // Gather per-year data
+  const years = {};
+  allRows.forEach(r => {
+    const d = r.desc.toLowerCase();
+    const date = r.dtd.split(' ')[0];
+    const yr = date.split('-')[2];
+    if (!yr || yr.length !== 4) return;
+    if (!years[yr]) years[yr] = {
+      deposited:0, withdrawn:0, invested:0,
+      divNet:0,   // net dividends received in CHF
+      taxChf:0,   // total withholding tax in CHF
+      novTaxChf:0,// Novartis 35% Verrechnungssteuer
+      usTaxChf:0, // US 15% withholding (DA-1)
+      divByStock:{},// gross per stock in CHF
+    };
+    const y = years[yr];
+    const n = r.chgN || 0;
+
+    if (r.dtype === 'deposit' && r.chgCcy === 'CHF' && n > 0) y.deposited += n;
+    if (r.dtype === 'deposit' && r.chgCcy === 'CHF' && n < 0) y.withdrawn += Math.abs(n);
+    if (d.startsWith('fx debit') && r.chgCcy === 'CHF') y.invested += Math.abs(n);
+    if (d.startsWith('buy ') && r.chgCcy === 'CHF' && !r.fx) y.invested += Math.abs(n);
+
+    // Net dividend received
+    if (r.dtype === 'dividend' && !d.includes('tax') && n > 0) {
+      const chf = toChf(n, r.chgCcy, date);
+      if (chf) {
+        y.divNet += chf;
+        const stock = r.product || 'Unknown';
+        y.divByStock[stock] = (y.divByStock[stock] || {net:0, tax:0});
+        y.divByStock[stock].net += chf;
+      }
+    }
+    // Dividend tax
+    if (d.includes('dividend tax') && n < 0) {
+      const chf = toChf(Math.abs(n), r.chgCcy, date);
+      if (chf) {
+        y.taxChf += chf;
+        const stock = r.product || 'Unknown';
+        y.divByStock[stock] = (y.divByStock[stock] || {net:0, tax:0});
+        y.divByStock[stock].tax += chf;
+        if (r.chgCcy === 'CHF') y.novTaxChf += Math.abs(n);
+        if (r.chgCcy === 'USD') y.usTaxChf += chf;
+      }
+    }
+  });
+
+  const currentPortfolioVal = p3Rows.reduce((s,r) => s + (r.currentVal||0), 0);
+  const sortedYears = Object.keys(years).sort();
+  const thisYear = new Date().getFullYear().toString();
+
+  function statusBadge(yr) {
+    if (yr < thisYear) {
+      const deadline = `31 Mar ${+yr+1}`;
+      return `<span style="background:#1a4a2e;color:#4caf50;border:1px solid #4caf50;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700">CLOSED YEAR — should be filed by ${deadline}</span>`;
+    }
+    return `<span style="background:#1a2a4a;color:#ff9800;border:1px solid #ff9800;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700">IN PROGRESS — recalculate after 31 Dec ${yr}</span>`;
+  }
+
+  function kpi(label, val, color, note) {
+    return `<div style="background:#0a1628;border-radius:6px;padding:12px 16px;min-width:160px;flex:1">
+      <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">${label}</div>
+      <div style="font-size:16px;font-weight:700;color:${color||'#e0e0e0'}">CHF ${fmtN(val)}</div>
+      ${note ? `<div style="font-size:10px;color:#555;margin-top:2px">${note}</div>` : ''}
+    </div>`;
+  }
+
+  let html = '';
+  sortedYears.forEach(yr => {
+    const y = years[yr];
+    const isCurrent = yr === thisYear;
+    const grossDiv = y.divNet + y.taxChf; // gross = net received + tax withheld
+    const novGross = y.novTaxChf > 0 ? y.novTaxChf / 0.35 : 0;
+
+    // Per-stock dividend table
+    const stockRows = Object.entries(y.divByStock)
+      .sort((a,b) => (b[1].net+b[1].tax) - (a[1].net+a[1].tax))
+      .map(([stock, v]) => {
+        const gross = v.net + v.tax;
+        const isNov = stock.toLowerCase().includes('novartis');
+        const action = isNov
+          ? '<span style="color:#4caf50">Tick Verrechnungssteuer box → 35% refunded</span>'
+          : v.tax > 0 ? '<span style="color:#ff9800">Declare gross → DA-1 for 15% credit</span>'
+                      : '<span style="color:#888">Declare gross dividend</span>';
+        return `<tr style="border-bottom:1px solid #0f1e35">
+          <td style="padding:6px 10px;color:#e0e0e0">${stock}</td>
+          <td style="padding:6px 10px;text-align:right;color:#4caf50">CHF ${fmtN(gross)}</td>
+          <td style="padding:6px 10px;text-align:right;color:#e94560">${v.tax>0 ? 'CHF '+fmtN(v.tax) : '—'}</td>
+          <td style="padding:6px 10px;text-align:right;color:#b0b0b0">CHF ${fmtN(v.net)}</td>
+          <td style="padding:6px 10px;font-size:11px">${action}</td>
+        </tr>`;
+      }).join('');
+
+    const portfolioNote = isCurrent
+      ? `<div style="padding:12px 16px;background:#0a1628;border-radius:6px;border-left:3px solid #ff9800;font-size:12px;color:#b0b0b0">
+          <strong style="color:#ff9800">Portfolio value as of today:</strong> CHF ${fmtN(currentPortfolioVal)} (live prices).
+          For the Steuererklärung you need the value on <strong style="color:#e0e0e0">31 December ${yr}</strong>.
+          Come back after 31 Dec ${yr} and reload — this will update with the final figure from your CSV.<br>
+          Alternatively download the <strong style="color:#64b5f6">DEGIRO Jahresabschluss ${yr}</strong> (available in Jan ${+yr+1} in your DEGIRO inbox).
+        </div>`
+      : `<div style="padding:12px 16px;background:#0a1628;border-radius:6px;border-left:3px solid #64b5f6;font-size:12px;color:#b0b0b0">
+          <strong style="color:#64b5f6">Portfolio value on 31 Dec ${yr}:</strong>
+          Download <strong style="color:#e0e0e0">DEGIRO Jahresabschluss ${yr}</strong> from your DEGIRO inbox (Postbox → Annual Report ${yr}).
+          Enter that value in Formular 3 (Wertschriftenverzeichnis) column "Kurswert am 31.12."
+        </div>`;
+
+    html += `
+    <div style="background:#16213e;border:1px solid #0f3460;border-radius:10px;padding:20px 24px;margin-bottom:24px">
+
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="font-size:22px;font-weight:800;color:#e0e0e0">Tax Year ${yr}</div>
+        ${statusBadge(yr)}
+        ${yr === '2024' ? '<span style="background:#16213e;color:#888;border:1px solid #333;border-radius:4px;padding:2px 8px;font-size:11px">First year · started 13 Nov 2024</span>' : ''}
+      </div>
+
+      <!-- KPI row -->
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+        ${kpi('Transferred In', y.deposited, '#64b5f6', 'NOT taxable — own money')}
+        ${kpi('Total Invested', y.invested, '#e0e0e0', 'stocks + ETFs purchased')}
+        ${grossDiv > 0 ? kpi('Gross Dividends to Declare', grossDiv, '#4caf50', 'enter in Formular 3') : ''}
+        ${y.taxChf > 0 ? kpi('Tax Withheld', y.taxChf, '#e94560', 'already deducted') : ''}
+        ${y.novTaxChf > 0 ? kpi('🇨🇭 Verrechnungssteuer to Reclaim', y.novTaxChf, '#4caf50', 'tick box → refunded') : ''}
+        ${y.usTaxChf > 0 ? kpi('🇺🇸 DA-1 Credit (US 15%)', y.usTaxChf, '#ff9800', 'file DA-1 form') : ''}
+      </div>
+
+      <!-- Dividend table -->
+      ${stockRows ? `
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Dividends received in ${yr}</div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead>
+              <tr style="background:#0f3460;color:#90caf9">
+                <th style="padding:6px 10px;text-align:left">Stock</th>
+                <th style="padding:6px 10px;text-align:right">Gross (declare this)</th>
+                <th style="padding:6px 10px;text-align:right">Tax Withheld</th>
+                <th style="padding:6px 10px;text-align:right">Net Received</th>
+                <th style="padding:6px 10px;text-align:left">Action</th>
+              </tr>
+            </thead>
+            <tbody>${stockRows}</tbody>
+          </table>
+        </div>
+      </div>` : `<div style="padding:10px 14px;background:#0a1628;border-radius:6px;color:#666;font-size:12px">No dividends received in ${yr}.</div>`}
+
+      <!-- Portfolio value note -->
+      <div style="margin-top:12px">${portfolioNote}</div>
+
+      <!-- Checklist -->
+      <div style="margin-top:14px;padding:12px 16px;background:#0a1628;border-radius:6px">
+        <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Checklist for ${yr}</div>
+        <div style="font-size:12px;color:#b0b0b0;line-height:2">
+          ${isCurrent
+            ? '⏳ Year not yet complete — come back after 31 Dec '+yr+' to finalise<br>📅 Deadline: 31 March '+(+yr+1)+' (extendable to 30 Nov '+(+yr+1)+' — request online at steueramt.zh.ch)'
+            : `${grossDiv > 0 ? '☐ Enter gross dividends CHF '+fmtN(grossDiv)+' in Formular 3 (Wertschriftenverzeichnis)<br>' : ''}
+               ${y.novTaxChf > 0 ? '☐ Tick "Verrechnungssteuer zurückfordern" for Novartis → get CHF '+fmtN(y.novTaxChf)+' refunded<br>' : ''}
+               ${y.usTaxChf > 0 ? '☐ Complete DA-1 form for US withholding → CHF '+fmtN(y.usTaxChf)+' credited against your tax<br>' : ''}
+               ☐ Download DEGIRO Jahresabschluss ${yr} → enter portfolio value on 31 Dec in Formular 3<br>
+               ☐ Deposits (CHF ${fmtN(y.deposited)}) are NOT taxable income — do not declare as income<br>
+               📅 Deadline: 31 March ${+yr+1} (extendable to 30 Nov ${+yr+1})`
+          }
+        </div>
+      </div>
+    </div>`;
+  });
+
+  el.innerHTML = html;
 }
 
 function buildTable() {
@@ -1652,6 +1862,7 @@ async function fetchLivePrices() {
   renderP3Table();
   buildT1Summary(); // refresh P&L and portfolio value in summary panel
   buildT9Summary(); // refresh tax guide numbers
+  buildT10();       // refresh tax by year
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1889,6 +2100,7 @@ function wireControls() {
     if (t.dataset.tab === 't6' && allRows.length) buildReturns();
     if (t.dataset.tab === 't7') initAssetInfo();
     if (t.dataset.tab === 't9' && allRows.length) buildT9Summary();
+    if (t.dataset.tab === 't10' && allRows.length) buildT10();
   }));
 }
 
