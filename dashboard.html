@@ -1195,8 +1195,10 @@ function buildT10() {
       if (chf) {
         y.divNet += chf;
         const stock = r.product || 'Unknown';
-        y.divByStock[stock] = (y.divByStock[stock] || {net:0, tax:0});
+        if (!y.divByStock[stock]) y.divByStock[stock] = {net:0, tax:0, origNet:0, origTax:0, ccy:r.chgCcy};
         y.divByStock[stock].net += chf;
+        y.divByStock[stock].origNet += n;
+        y.divByStock[stock].ccy = r.chgCcy;
       }
     }
     // Dividend tax
@@ -1205,8 +1207,10 @@ function buildT10() {
       if (chf) {
         y.taxChf += chf;
         const stock = r.product || 'Unknown';
-        y.divByStock[stock] = (y.divByStock[stock] || {net:0, tax:0});
+        if (!y.divByStock[stock]) y.divByStock[stock] = {net:0, tax:0, origNet:0, origTax:0, ccy:r.chgCcy};
         y.divByStock[stock].tax += chf;
+        y.divByStock[stock].origTax += Math.abs(n);
+        if (!y.divByStock[stock].ccy) y.divByStock[stock].ccy = r.chgCcy;
         if (r.chgCcy === 'CHF') y.novTaxChf += Math.abs(n);
         if (r.chgCcy === 'USD') y.usTaxChf += chf;
       }
@@ -1250,8 +1254,13 @@ function buildT10() {
           ? '<span style="color:#4caf50">Tick Verrechnungssteuer box → 35% refunded</span>'
           : v.tax > 0 ? '<span style="color:#ff9800">Declare gross → DA-1 for 15% credit</span>'
                       : '<span style="color:#888">Declare gross dividend</span>';
+        const origGross = v.origNet + v.origTax;
+        const origDisp = origGross > 0
+          ? `<span style="font-weight:600">${origGross.toFixed(2)}</span> <span style="color:#64b5f6;font-size:10px">${v.ccy}</span>`
+          : '—';
         return `<tr style="border-bottom:1px solid #0f1e35">
           <td style="padding:6px 10px;color:#e0e0e0">${stock}</td>
+          <td style="padding:6px 10px;text-align:right;color:#e0e0e0">${origDisp}</td>
           <td style="padding:6px 10px;text-align:right;color:#4caf50">CHF ${fmtN(gross)}</td>
           <td style="padding:6px 10px;text-align:right;color:#e94560">${v.tax>0 ? 'CHF '+fmtN(v.tax) : '—'}</td>
           <td style="padding:6px 10px;text-align:right;color:#b0b0b0">CHF ${fmtN(v.net)}</td>
@@ -1300,9 +1309,10 @@ function buildT10() {
             <thead>
               <tr style="background:#0f3460;color:#90caf9">
                 <th style="padding:6px 10px;text-align:left">Stock</th>
-                <th style="padding:6px 10px;text-align:right">Gross (declare this)</th>
-                <th style="padding:6px 10px;text-align:right">Tax Withheld</th>
-                <th style="padding:6px 10px;text-align:right">Net Received</th>
+                <th style="padding:6px 10px;text-align:right">Original Amount</th>
+                <th style="padding:6px 10px;text-align:right">Gross CHF (declare this)</th>
+                <th style="padding:6px 10px;text-align:right">Tax Withheld CHF</th>
+                <th style="padding:6px 10px;text-align:right">Net Received CHF</th>
                 <th style="padding:6px 10px;text-align:left">Action</th>
               </tr>
             </thead>
