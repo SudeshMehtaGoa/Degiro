@@ -1189,8 +1189,8 @@ function buildT10() {
     if (d.startsWith('fx debit') && r.chgCcy === 'CHF') y.invested += Math.abs(n);
     if (d.startsWith('buy ') && r.chgCcy === 'CHF' && !r.fx) y.invested += Math.abs(n);
 
-    // Net dividend received
-    if (r.dtype === 'dividend' && !d.includes('tax') && n > 0) {
+    // Net dividend received (n !== 0: reversals/corrections are negative and must reduce the total)
+    if (r.dtype === 'dividend' && !d.includes('tax') && n !== 0) {
       const chf = toChf(n, r.chgCcy, date);
       if (chf) {
         y.divNet += chf;
@@ -1243,19 +1243,17 @@ function buildT10() {
   sortedYears.forEach(yr => {
     const y = years[yr];
     const isCurrent = yr === thisYear;
-    // Sum per-stock gross: CHF stocks use net (dividend row IS the gross);
-    // USD/EUR stocks add back tax to reconstruct gross for Swiss tax declaration
-    const grossDiv = Object.values(y.divByStock)
-      .reduce((s, v) => s + (v.ccy === 'CHF' ? v.net : v.net + v.tax), 0);
+    // grossDiv = y.divNet: for both CHF and USD stocks the dividend row is the GROSS
+    // (DEGIRO records gross before deducting Verrechnungssteuer/foreign withholding)
+    const grossDiv = y.divNet;
     const novGross = y.novTaxChf > 0 ? y.novTaxChf / 0.35 : 0;
 
     // Per-stock dividend table
     const stockRows = Object.entries(y.divByStock)
       .sort((a,b) => (b[1].net+b[1].tax) - (a[1].net+a[1].tax))
       .map(([stock, v]) => {
-        // CHF stocks (Novartis): dividend row IS the gross — DEGIRO deducts Verrechnungssteuer from it
-        // USD/EUR stocks: dividend row is net after foreign withholding — add back tax to get gross
-        const gross = v.ccy === 'CHF' ? v.net : v.net + v.tax;
+        // For all stocks: the dividend row is the GROSS amount (before deductions)
+        const gross = v.net;
         const isNov = stock.toLowerCase().includes('novartis');
         const action = isNov
           ? '<span style="color:#4caf50">Tick Verrechnungssteuer box → 35% refunded</span>'
