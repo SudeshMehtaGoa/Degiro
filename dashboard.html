@@ -1255,6 +1255,8 @@ function buildT10() {
           : v.tax > 0 ? '<span style="color:#ff9800">Declare gross → DA-1 for 15% credit</span>'
                       : '<span style="color:#888">Declare gross dividend</span>';
         const origGross = v.origNet + v.origTax;
+        const origNetUsd = v.origNet - v.origTax; // net USD that DEGIRO actually FX-converts
+        const netReceived = v.net - v.tax;         // CHF actually landed (net USD / rate)
         const origDisp = origGross > 0
           ? `<span style="font-weight:600">${origGross.toFixed(2)}</span> <span style="color:#64b5f6;font-size:10px">${v.ccy}</span>`
           : '—';
@@ -1263,7 +1265,7 @@ function buildT10() {
           <td style="padding:6px 10px;text-align:right;color:#e0e0e0">${origDisp}</td>
           <td style="padding:6px 10px;text-align:right;color:#4caf50">CHF ${fmtN(gross)}</td>
           <td style="padding:6px 10px;text-align:right;color:#e94560">${v.tax>0 ? 'CHF '+fmtN(v.tax) : '—'}</td>
-          <td style="padding:6px 10px;text-align:right;color:#b0b0b0">CHF ${fmtN(v.net)}</td>
+          <td style="padding:6px 10px;text-align:right;color:#b0b0b0">CHF ${fmtN(netReceived)}</td>
           <td style="padding:6px 10px;font-size:11px">${action}</td>
         </tr>`;
       }).join('');
@@ -1949,16 +1951,17 @@ function buildDividends(rawRows) {
   });
 
   // Step 3 — convert to CHF using actual FX rates
-  // Note: grossOrig = NET amount DEGIRO credits (after withholding), taxOrig = negative (withheld)
-  // True gross to declare = grossOrig + |taxOrig|; net received = grossOrig
+  // grossOrig = dividend credited (1.82 USD), taxOrig = tax deducted (−0.27 USD)
+  // DEGIRO converts only the net (1.55 USD) to CHF → FX Credit row = actual CHF received
+  // So netChf = (grossOrig + taxOrig) / rate = net USD / rate = actual CHF landed
   return Object.values(groups)
     .filter(g => g.grossOrig > 0.001)
     .map(g => {
       const rate = getRate(g.date, g.currency);
-      const cvt  = v => g.currency === 'CHF' ? v : (rate != null ? v / rate : null);
-      const netChf   = cvt(g.grossOrig);         // what you actually received
-      const taxChf   = cvt(g.taxOrig);            // negative (withheld)
-      const grossChf = (netChf != null && taxChf != null) ? netChf - taxChf : netChf; // true gross (netChf + |tax|)
+      const toChf = v => rate != null ? v / rate : null;
+      const grossChf = g.currency === 'CHF' ? g.grossOrig : toChf(g.grossOrig);
+      const taxChf   = g.currency === 'CHF' ? g.taxOrig   : toChf(g.taxOrig);
+      const netChf   = (grossChf != null && taxChf != null) ? grossChf + taxChf : grossChf;
       return { ...g, grossChf, taxChf, netChf };
     })
     .sort((a, b) => b.dateSort.localeCompare(a.dateSort));
