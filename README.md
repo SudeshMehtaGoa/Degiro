@@ -16,6 +16,7 @@ A local, self-hosted investment dashboard for DEGIRO brokerage accounts. Drop in
 | **Transactions** | Full raw CSV — sortable, filterable, paginated |
 | **Asset Info** | Auto-detects stock vs ETF. Stocks: 20+ key ratios in 4 sections. ETFs: AUM, TER, YTD/3Y/5Y returns, top 10 holdings, sector weights chart, asset allocation. Both include price history chart (1M/3M/6M/1Y/5Y) |
 | **Investment Rules** | Personal reference guide — golden rules, stock & ETF checklists, ratio quick reference, portfolio construction, behavioural rules, Switzerland notes |
+| **Swiss Tax Guide** | Personalised for Swiss citizen in Zurich filing Steuererklärung: what to declare (dividends, portfolio value), what is tax-free (capital gains), how to reclaim Novartis 35% Verrechnungssteuer and US 15% withholding via DA-1 form. Summary cards auto-calculated from your actual CSV data. |
 
 **Key capabilities:**
 - Live prices fetched from Yahoo Finance via `yfinance`
