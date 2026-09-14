@@ -13,7 +13,7 @@ A local, self-hosted investment dashboard for DEGIRO brokerage accounts. Drop in
 | **Dividends** | Every dividend event converted to CHF using actual DEGIRO FX rates |
 | **Dividend Summary** | Net dividend received per asset (after tax) |
 | **Returns** | XIRR (annualised return %) per asset and for the full portfolio |
-| **Transactions** | Full raw CSV — sortable, filterable, paginated |
+| **Transactions** | Full raw CSV — sortable, with per-column filters and totals row |
 | **Asset Info** | Auto-detects stock vs ETF. Stocks: 20+ key ratios in 4 sections. ETFs: AUM, TER, YTD/3Y/5Y returns, top 10 holdings, sector weights chart, asset allocation. Both include price history chart (1M/3M/6M/1Y/5Y) |
 | **Investment Rules** | Personal reference guide — golden rules, stock & ETF checklists, ratio quick reference, portfolio construction, behavioural rules, Switzerland notes |
 | **Swiss Tax Guide** | Personalised for Swiss citizen in Zurich filing Steuererklärung: what to declare (dividends, portfolio value), what is tax-free (capital gains), how to reclaim Novartis 35% Verrechnungssteuer and US 15% withholding via DA-1 form. Summary cards auto-calculated from your actual CSV data. |
@@ -30,6 +30,7 @@ A local, self-hosted investment dashboard for DEGIRO brokerage accounts. Drop in
 - Natural page scroll on all tabs — full table always visible, no cramped scroll boxes
 - Tab bar stays sticky at top while scrolling
 - Search filter on every tab — filter by asset name or ISIN
+- Per-column filter inputs on every table tab — filter by date, asset, ISIN, type and more
 - Column sort on every tab — click any header
 - Column headers clean (no CHF clutter) — `* All values are in CHF` note above each table
 - Prices cached for 5 minutes to avoid hammering Yahoo Finance

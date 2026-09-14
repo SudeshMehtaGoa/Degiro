@@ -33,12 +33,11 @@
 
     /* ── Table ── */
     .table-wrap { overflow-x: auto; border-radius: 6px; }
-    #t1 .table-wrap { max-height: 65vh; overflow-y: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 12px; }
 
     thead th {
       background: #0f3460; color: #e0e0e0; padding: 8px 10px;
-      text-align: left; position: sticky; top: 0; z-index: 2;
+      text-align: left; position: sticky; top: 46px; z-index: 2;
       white-space: nowrap; cursor: pointer; user-select: none;
     }
     thead th:hover { background: #1a4a80; }
@@ -47,7 +46,7 @@
     thead th.sd .si::after { content: '▼'; opacity: 1; }
     thead th:not(.sa):not(.sd) .si::after { content: '⇅'; }
 
-    thead tr.fr th { background: #122040; padding: 4px 6px; position: sticky; top: 33px; z-index: 2; }
+    thead tr.fr th { background: #122040; padding: 4px 6px; position: sticky; top: 79px; z-index: 2; }
     thead tr.fr th input {
       width: 100%; padding: 3px 6px; border-radius: 3px;
       border: 1px solid #0f3460; background: #1a1a2e; color: #e0e0e0; font-size: 11px;
@@ -164,6 +163,13 @@
           <th data-col="8" style="text-align:right">Current Value<span class="si"></span></th>
           <th data-col="9" style="text-align:right">Total Return<span class="si"></span></th>
           <th data-col="10" style="text-align:right">Return %<span class="si"></span></th>
+        </tr>
+        <tr class="fr">
+          <th></th>
+          <th><input type="text" id="p6f1" placeholder="Filter asset…"></th>
+          <th></th>
+          <th><input type="text" id="p6f3" placeholder="Filter ISIN…"></th>
+          <th></th><th></th><th></th><th></th><th></th><th></th><th></th>
         </tr>
       </thead>
       <tbody id="p6body"></tbody>
@@ -674,14 +680,6 @@
         <option value="EUR">EUR</option>
       </select>
     </div>
-    <div><label>Rows/page:&nbsp;</label>
-      <select id="ps">
-        <option value="50">50</option>
-        <option value="100">100</option>
-        <option value="200">200</option>
-        <option value="9999">All</option>
-      </select>
-    </div>
     <button class="btn" id="clrBtn">Clear Filters</button>
     <button class="btn" id="reloadBtn" style="background:#0f3460" title="Re-read Account.csv from disk">&#8635; Reload Data</button>
     <span class="info" id="rc"></span>
@@ -691,10 +689,7 @@
   <div class="table-wrap" id="tableWrap">
     <div class="loading">Loading data…</div>
   </div>
-  <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-    <span class="page-info" id="pi"></span>
-    <div class="pagination" id="pg"></div>
-  </div>
+  <span class="info" style="margin-top:8px;display:block" id="pi"></span>
 </div>
 
 <!-- ── Tab 2: Purchases ── -->
@@ -719,6 +714,17 @@
           <th data-col="6" style="text-align:right">Rate/unit<span class="si"></span></th>
           <th data-col="7" style="text-align:right">Fee<span class="si"></span></th>
           <th data-col="8" style="text-align:right">Total<span class="si"></span></th>
+        </tr>
+        <tr class="fr">
+          <th><input type="text" id="p2f0" placeholder="Filter…"></th>
+          <th><input type="text" id="p2f1" placeholder="Filter…"></th>
+          <th><input type="text" id="p2f2" placeholder="Filter…"></th>
+          <th><input type="text" id="p2f3" placeholder="Filter…"></th>
+          <th><input type="text" id="p2f4" placeholder="Filter…"></th>
+          <th><input type="text" id="p2f5" placeholder="Filter…"></th>
+          <th><input type="text" id="p2f6" placeholder="Filter…"></th>
+          <th><input type="text" id="p2f7" placeholder="Filter…"></th>
+          <th><input type="text" id="p2f8" placeholder="Filter…"></th>
         </tr>
       </thead>
       <tbody id="p2body"></tbody>
@@ -751,6 +757,13 @@
           <th data-col="7" style="text-align:right">Current Value<span class="si"></span></th>
           <th data-col="8" style="text-align:right">Total Return<span class="si"></span></th>
         </tr>
+        <tr class="fr">
+          <th></th>
+          <th><input type="text" id="p3f1" placeholder="Filter asset…"></th>
+          <th><input type="text" id="p3f9" placeholder="ETF / Stock"></th>
+          <th><input type="text" id="p3f2" placeholder="Filter ISIN…"></th>
+          <th></th><th></th><th></th><th></th><th></th><th></th>
+        </tr>
       </thead>
       <tbody id="p3body"></tbody>
     </table>
@@ -774,6 +787,11 @@
           <th data-col="0" style="width:50px">No<span class="si"></span></th>
           <th data-col="1">Asset<span class="si"></span></th>
           <th data-col="2" style="text-align:right">Total Dividend After Tax<span class="si"></span></th>
+        </tr>
+        <tr class="fr">
+          <th></th>
+          <th><input type="text" id="p5f1" placeholder="Filter asset…"></th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="p5body"></tbody>
@@ -801,6 +819,12 @@
           <th data-col="4" style="text-align:right">Tax<span class="si"></span></th>
           <th data-col="5" style="text-align:right">Net Received<span class="si"></span></th>
         </tr>
+        <tr class="fr">
+          <th><input type="text" id="p4f0" placeholder="Filter date…"></th>
+          <th><input type="text" id="p4f1" placeholder="Filter asset…"></th>
+          <th><input type="text" id="p4f2" placeholder="Filter ISIN…"></th>
+          <th></th><th></th><th></th>
+        </tr>
       </thead>
       <tbody id="p4body"></tbody>
     </table>
@@ -816,7 +840,6 @@ const CSV_URL = 'Account.csv';
 // ── State ────────────────────────────────────────────────
 let allRows = [], filteredRows = [];
 let sortCol = 0, sortAsc = false;
-let page = 1, pageSize = 50;
 
 // ── Boot ────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -1384,7 +1407,7 @@ function buildTable() {
       else { sortCol = c; sortAsc = (c !== 0); }
       document.querySelectorAll('#hr th').forEach(h => h.classList.remove('sa', 'sd'));
       th.classList.add(sortAsc ? 'sa' : 'sd');
-      sortRows(); page = 1; renderRows();
+      sortRows(); renderRows();
     });
   });
   // Column filters
@@ -1419,7 +1442,7 @@ function applyFilters() {
     return true;
   });
 
-  sortRows(); page = 1; renderRows();
+  sortRows(); renderRows();
 }
 
 function sortRows() {
@@ -1436,10 +1459,8 @@ function sortRows() {
 // ── Render rows ──────────────────────────────────────────
 function renderRows() {
   const total = filteredRows.length;
-  const start = (page - 1) * pageSize;
-  const end   = Math.min(start + pageSize, total);
 
-  document.getElementById('tb').innerHTML = filteredRows.slice(start, end).map(r => {
+  document.getElementById('tb').innerHTML = filteredRows.map(r => {
     const cc = r.chgN > 0 ? 'pos' : r.chgN < 0 ? 'neg' : 'neu';
     return `<tr>
       <td>${esc(r.dtd)}</td>
@@ -1461,9 +1482,9 @@ function renderRows() {
   document.getElementById('rc').textContent =
     total + ' rows' + (total !== allRows.length ? ` (filtered from ${allRows.length})` : '');
   document.getElementById('pi').textContent =
-    total ? `Showing ${start + 1}–${end} of ${total}` : 'No results';
+    total ? `${total} rows` + (total !== allRows.length ? ` — filtered from ${allRows.length}` : '') : 'No results';
 
-  // Totals footer — sum Change by currency across ALL filtered rows (not just current page)
+  // Totals footer — sum Change by currency across filtered rows
   const ccySums = {};
   filteredRows.forEach(r => {
     if (r.chgCcy && r.chgN != null) ccySums[r.chgCcy] = (ccySums[r.chgCcy] || 0) + r.chgN;
@@ -1480,8 +1501,6 @@ function renderRows() {
     <td style="text-align:right;padding:6px 10px">${sumHtml || '—'}</td>
     <td colspan="3" style="padding:6px 10px"></td>
   </tr>`;
-
-  renderPagination(total);
 }
 
 // ── Pagination ───────────────────────────────────────────
@@ -1636,12 +1655,22 @@ function wirePurchaseSort() {
 }
 
 function wirePurchaseSearch() {
-  document.getElementById('p2gs').addEventListener('input', () => {
-    const q = document.getElementById('p2gs').value.toLowerCase();
-    p2Filtered = q
-      ? p2Rows.filter(r => r.asset.toLowerCase().includes(q) || r.isin.toLowerCase().includes(q))
-      : [...p2Rows];
+  const applyP2 = () => {
+    const q  = document.getElementById('p2gs').value.toLowerCase();
+    const cf = [0,1,2,3,4,5,6,7,8].map(i => (document.getElementById('p2f'+i)?.value||'').toLowerCase());
+    p2Filtered = p2Rows.filter(r => {
+      const c = p2Cells(r);
+      if (q && !c.some(x => x.toLowerCase().includes(q))) return false;
+      for (let i = 0; i < cf.length; i++)
+        if (cf[i] && !c[i].toLowerCase().includes(cf[i])) return false;
+      return true;
+    });
     sortP2(); renderP2Table();
+  };
+  document.getElementById('p2gs').addEventListener('input', applyP2);
+  [0,1,2,3,4,5,6,7,8].forEach(i => {
+    const el = document.getElementById('p2f'+i);
+    if (el) el.addEventListener('input', applyP2);
   });
 }
 
@@ -1729,11 +1758,24 @@ function buildPortfolio() {
   });
   p3Filtered = [...p3Rows];
 
-  document.getElementById('p3gs').oninput = () => {
-    const q = document.getElementById('p3gs').value.toLowerCase();
-    p3Filtered = q ? p3Rows.filter(r => r.asset.toLowerCase().includes(q) || r.isin.toLowerCase().includes(q)) : [...p3Rows];
+  const applyP3 = () => {
+    const q   = (document.getElementById('p3gs')?.value||'').toLowerCase();
+    const f1  = (document.getElementById('p3f1')?.value||'').toLowerCase();
+    const f9  = (document.getElementById('p3f9')?.value||'').toLowerCase();
+    const f2  = (document.getElementById('p3f2')?.value||'').toLowerCase();
+    p3Filtered = p3Rows.filter(r => {
+      if (q && !r.asset.toLowerCase().includes(q) && !r.isin.toLowerCase().includes(q)) return false;
+      if (f1 && !r.asset.toLowerCase().includes(f1)) return false;
+      if (f9 && !r.assetType.toLowerCase().includes(f9)) return false;
+      if (f2 && !(r.isin||'').toLowerCase().includes(f2)) return false;
+      return true;
+    });
     renderP3Table();
   };
+  document.getElementById('p3gs').oninput = applyP3;
+  ['p3f1','p3f9','p3f2'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.addEventListener('input', applyP3);
+  });
 
   wirePo3Sort();
   renderP3Table();
@@ -1970,17 +2012,29 @@ function buildDividends(rawRows) {
     .sort((a, b) => b.dateSort.localeCompare(a.dateSort));
 }
 
+function applyP4() {
+  const q  = (document.getElementById('p4gs')?.value||'').toLowerCase();
+  const f0 = (document.getElementById('p4f0')?.value||'').toLowerCase();
+  const f1 = (document.getElementById('p4f1')?.value||'').toLowerCase();
+  const f2 = (document.getElementById('p4f2')?.value||'').toLowerCase();
+  p4Filtered = p4Rows.filter(r => {
+    if (q && !r.asset.toLowerCase().includes(q) && !r.isin.toLowerCase().includes(q)) return false;
+    if (f0 && !r.date.toLowerCase().includes(f0)) return false;
+    if (f1 && !r.asset.toLowerCase().includes(f1)) return false;
+    if (f2 && !(r.isin||'').toLowerCase().includes(f2)) return false;
+    return true;
+  });
+  sortP4(); renderP4Table();
+}
+
 function renderDividends() {
   if (!p4Rows.length) {
     p4Rows    = buildDividends(allRows);
     p4Filtered = [...p4Rows];
     wireP4Sort();
-    document.getElementById('p4gs').addEventListener('input', () => {
-      const q = document.getElementById('p4gs').value.toLowerCase();
-      p4Filtered = q
-        ? p4Rows.filter(r => r.asset.toLowerCase().includes(q) || r.isin.toLowerCase().includes(q))
-        : [...p4Rows];
-      sortP4(); renderP4Table();
+    document.getElementById('p4gs').addEventListener('input', applyP4);
+    ['p4f0','p4f1','p4f2'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.addEventListener('input', applyP4);
     });
   }
   renderP4Table();
@@ -2058,10 +2112,17 @@ function renderDivSummary() {
   });
 
   const q5 = (document.getElementById('p5gs')?.value || '').toLowerCase();
-  let rows = Object.values(map).filter(r => !q5 || r.asset.toLowerCase().includes(q5));
+  const f51 = (document.getElementById('p5f1')?.value || '').toLowerCase();
+  let rows = Object.values(map).filter(r => {
+    if (q5 && !r.asset.toLowerCase().includes(q5)) return false;
+    if (f51 && !r.asset.toLowerCase().includes(f51)) return false;
+    return true;
+  });
 
-  // Wire search once
+  // Wire search and column filter once
   document.getElementById('p5gs').oninput = () => renderDivSummary();
+  const p5f1el = document.getElementById('p5f1');
+  if (p5f1el && !p5f1el._wired) { p5f1el.addEventListener('input', () => renderDivSummary()); p5f1el._wired = true; }
 
   // Sort
   rows.sort((a, b) => {
@@ -2104,10 +2165,6 @@ function wireControls() {
   document.getElementById('yf').addEventListener('change', applyFilters);
   document.getElementById('tf').addEventListener('change', applyFilters);
   document.getElementById('cf').addEventListener('change', applyFilters);
-  document.getElementById('ps').addEventListener('change', () => {
-    pageSize = +document.getElementById('ps').value;
-    page = 1; renderRows();
-  });
   document.getElementById('clrBtn').addEventListener('click', () => {
     document.getElementById('gs').value = '';
     document.getElementById('yf').value = '';
@@ -2712,12 +2769,23 @@ function wireP6Sort() {
 
 function renderReturnsTable() {
   const q6 = (document.getElementById('p6gs')?.value || '').toLowerCase();
-  const p6Filtered = q6 ? p6Rows.filter(r => r.asset.toLowerCase().includes(q6) || r.isin.toLowerCase().includes(q6)) : p6Rows;
+  const f61 = (document.getElementById('p6f1')?.value || '').toLowerCase();
+  const f63 = (document.getElementById('p6f3')?.value || '').toLowerCase();
+  const p6Filtered = p6Rows.filter(r => {
+    if (q6 && !r.asset.toLowerCase().includes(q6) && !(r.isin||'').toLowerCase().includes(q6)) return false;
+    if (f61 && !r.asset.toLowerCase().includes(f61)) return false;
+    if (f63 && !(r.isin||'').toLowerCase().includes(f63)) return false;
+    return true;
+  });
 
-  // Wire search once
+  // Wire search and column filters once
   if (!document.getElementById('p6gs')._wired) {
     document.getElementById('p6gs').oninput = () => renderReturnsTable();
     document.getElementById('p6gs')._wired = true;
+    ['p6f1','p6f3'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && !el._wired) { el.addEventListener('input', () => renderReturnsTable()); el._wired = true; }
+    });
   }
 
   const numCols = new Set([2, 5, 6, 7, 8, 9, 10]);
