@@ -133,6 +133,7 @@
   <div class="tab" data-tab="t1">Transactions</div>
   <div class="tab" data-tab="t7">Asset Info</div>
   <div class="tab" data-tab="t8">Investment Rules</div>
+  <div class="tab" data-tab="t9">Swiss Tax Guide</div>
   <span class="meta" id="fileMeta"></span>
 </div>
 
@@ -449,6 +450,163 @@
   </div>
 </div>
 
+<!-- ── Tab 9: Swiss Tax Guide ── -->
+<div id="t9" class="tab-content">
+  <h2>Swiss Tax Guide</h2>
+  <p class="sub">Personalised for Swiss citizen · Opfikon, Zurich · filing full Steuererklärung · advance tax (Vorauszahlung)</p>
+
+  <!-- Summary cards -->
+  <div id="t9cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:28px"></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px">
+
+    <!-- DECLARE section -->
+    <div class="ir-section">
+      <div class="ir-title">✅ WHAT YOU MUST DECLARE</div>
+
+      <div style="margin-bottom:16px;padding:14px;background:#0a1628;border-radius:6px;border-left:3px solid #4caf50">
+        <div style="font-weight:700;color:#4caf50;margin-bottom:8px;font-size:13px">1. All Dividends Received (Wertschriftenerträge)</div>
+        <p style="font-size:12px;color:#b0b0b0;line-height:1.7;margin:0">
+          Declare the <strong style="color:#e0e0e0">gross dividend</strong> — i.e. the full amount <em>before</em> any withholding tax was deducted.
+          DEGIRO shows you both rows in the CSV: the gross dividend credit and the tax debit.
+          Add them together = gross amount to declare.<br><br>
+          In your Steuererklärung → <strong style="color:#64b5f6">Wertschriftenverzeichnis (Formular 3)</strong> → column "Ertrag"
+        </p>
+      </div>
+
+      <div style="margin-bottom:16px;padding:14px;background:#0a1628;border-radius:6px;border-left:3px solid #4caf50">
+        <div style="font-weight:700;color:#4caf50;margin-bottom:8px;font-size:13px">2. Portfolio Value on 31 December (Vermögen)</div>
+        <p style="font-size:12px;color:#b0b0b0;line-height:1.7;margin:0">
+          The market value of all your holdings at year-end is taxable as <strong style="color:#e0e0e0">wealth (Vermögen)</strong>.
+          DEGIRO sends an annual statement (Jahresabschluss) — use the values there.<br><br>
+          In your Steuererklärung → <strong style="color:#64b5f6">Wertschriftenverzeichnis (Formular 3)</strong> → column "Kurswert am 31.12."<br><br>
+          <span style="color:#ff9800">Zurich wealth tax rate: approx. 0.05%–0.3% of net wealth above exemption thresholds.</span>
+        </p>
+      </div>
+
+      <div style="margin-bottom:16px;padding:14px;background:#0a1628;border-radius:6px;border-left:3px solid #4caf50">
+        <div style="font-weight:700;color:#4caf50;margin-bottom:8px;font-size:13px">3. DEGIRO Account Balance on 31 December</div>
+        <p style="font-size:12px;color:#b0b0b0;line-height:1.7;margin:0">
+          Any uninvested cash sitting in your DEGIRO account counts as a bank balance and must be declared as wealth.
+          Include it in the Wertschriftenverzeichnis or the bank accounts section.
+        </p>
+      </div>
+    </div>
+
+    <!-- NOT DECLARE section -->
+    <div class="ir-section">
+      <div class="ir-title">🚫 WHAT YOU DO NOT DECLARE</div>
+
+      <div style="margin-bottom:16px;padding:14px;background:#0a1628;border-radius:6px;border-left:3px solid #e94560">
+        <div style="font-weight:700;color:#e94560;margin-bottom:8px;font-size:13px">Capital Gains are TAX FREE 🎉</div>
+        <p style="font-size:12px;color:#b0b0b0;line-height:1.7;margin:0">
+          In Switzerland, profits from selling stocks and ETFs are <strong style="color:#4caf50">completely tax-free</strong> for private investors.
+          You do <em>not</em> need to declare gains from selling Apple, Nvidia, or any of your holdings.<br><br>
+          <strong style="color:#ff9800">Exception:</strong> If you trade very frequently (professional trader status), Swiss tax authorities can reclassify you as a professional trader and tax your gains. As a long-term investor this does not apply to you.
+        </p>
+      </div>
+
+      <div style="margin-bottom:16px;padding:14px;background:#0a1628;border-radius:6px;border-left:3px solid #e94560">
+        <div style="font-weight:700;color:#e94560;margin-bottom:8px;font-size:13px">DEGIRO Transaction Fees</div>
+        <p style="font-size:12px;color:#b0b0b0;line-height:1.7;margin:0">
+          Brokerage fees are <strong style="color:#e0e0e0">not deductible</strong> in Switzerland for private investors (unlike in some other countries).
+          You cannot offset your CHF 87.82 in DEGIRO fees against your taxable income. Simply ignore them for tax purposes.
+        </p>
+      </div>
+
+      <div style="margin-bottom:16px;padding:14px;background:#0a1628;border-radius:6px;border-left:3px solid #e94560">
+        <div style="font-weight:700;color:#e94560;margin-bottom:8px;font-size:13px">FX Gains / Losses</div>
+        <p style="font-size:12px;color:#b0b0b0;line-height:1.7;margin:0">
+          Currency gains (e.g. USD appreciated vs CHF while you held a stock) are treated the same as capital gains — <strong style="color:#4caf50">tax-free</strong> for private investors. No need to track or declare FX gains.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECLAIM section -->
+  <div class="ir-section">
+    <div class="ir-title">💰 TAXES YOU CAN RECLAIM</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+      <div style="padding:16px;background:#0a1628;border-radius:6px;border-left:3px solid #ff9800">
+        <div style="font-weight:700;color:#ff9800;margin-bottom:8px;font-size:13px">🇨🇭 Novartis — Swiss Verrechnungssteuer (35%)</div>
+        <p style="font-size:12px;color:#b0b0b0;line-height:1.7;margin:0">
+          Switzerland withholds <strong style="color:#e0e0e0">35%</strong> on all Swiss company dividends (Novartis, Nestlé, Roche etc.).
+          This is a security deposit — Switzerland assumes you might not declare it. When you declare the gross dividend in your Steuererklärung, you get the full 35% back.<br><br>
+          <strong style="color:#4caf50">Action:</strong> In Formular 3 (Wertschriftenverzeichnis), tick the box "Verrechnungssteuer zurückfordern" and enter the gross Novartis dividend.
+          The refund is paid out when your tax assessment is finalised — usually 6–18 months later.<br><br>
+          <span id="t9novtax" style="color:#ff9800;font-weight:600"></span>
+        </p>
+      </div>
+
+      <div style="padding:16px;background:#0a1628;border-radius:6px;border-left:3px solid #ff9800">
+        <div style="font-weight:700;color:#ff9800;margin-bottom:8px;font-size:13px">🇺🇸 US Stocks — DA-1 Form (15% withholding)</div>
+        <p style="font-size:12px;color:#b0b0b0;line-height:1.7;margin:0">
+          The US withholds <strong style="color:#e0e0e0">15%</strong> on dividends paid to Swiss residents (reduced from 30% under the US-Switzerland tax treaty).
+          You can offset this 15% against your Swiss income tax via the <strong style="color:#64b5f6">DA-1 form</strong> (Antrag auf Pauschalabzug).<br><br>
+          <strong style="color:#4caf50">Action:</strong> Complete DA-1 (attached to your Steuererklärung). List each US stock separately with the gross dividend and tax withheld. The 15% is credited against your Swiss cantonal + federal tax.<br><br>
+          <strong style="color:#ff9800">Worth filing if:</strong> Your total US dividends exceed approx. CHF 200/year. Below that, the paperwork outweighs the refund.<br><br>
+          <span id="t9ustax" style="color:#ff9800;font-weight:600"></span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP BY STEP -->
+  <div class="ir-section">
+    <div class="ir-title">📋 STEP-BY-STEP: WHAT TO DO EACH YEAR</div>
+    <div style="padding:16px;background:#0a1628;border-radius:6px">
+      <ol style="font-size:12px;color:#b0b0b0;line-height:2;margin:0;padding-left:20px">
+        <li><strong style="color:#e0e0e0">Download DEGIRO Jahresabschluss</strong> — Log in to DEGIRO → Inbox → Annual Report for the tax year. This lists every security, units held, value on 31 Dec, and all dividends.</li>
+        <li><strong style="color:#e0e0e0">Open your Steuererklärung</strong> — Kanton Zürich uses the online tool <strong style="color:#64b5f6">ZHprivateTax</strong> (free, at steueramt.zh.ch).</li>
+        <li><strong style="color:#e0e0e0">Fill Formular 3 (Wertschriftenverzeichnis)</strong> — One row per security: ISIN, name, units, value on 31.12, gross dividend received. The tool auto-calculates wealth tax.</li>
+        <li><strong style="color:#e0e0e0">Reclaim Verrechnungssteuer (Novartis)</strong> — In Formular 3, tick "Rückerstattung Verrechnungssteuer" next to Novartis. Enter gross dividend. Refund comes later.</li>
+        <li><strong style="color:#e0e0e0">File DA-1 for US dividends</strong> — If you received US dividends ≥ CHF 200 gross total: attach DA-1 form listing Apple, Microsoft, J&amp;J, Nvidia, Alphabet, Oracle, Eli Lilly with gross dividend and 15% tax per stock.</li>
+        <li><strong style="color:#e0e0e0">Check your Vorauszahlung</strong> — Your advance tax payment was an estimate. Once the Steuererklärung is assessed (months later), you either get a refund or pay the difference. Update the Vorauszahlung amount for next year if your income/wealth changed significantly.</li>
+        <li><strong style="color:#e0e0e0">Deadline</strong> — Zurich standard deadline is <strong style="color:#e94560">31 March</strong> (can request extension to 30 November online, free of charge).</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- QUICK REFERENCE -->
+  <div class="ir-section">
+    <div class="ir-title">⚡ QUICK REFERENCE — YOUR STOCKS</div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:#0f3460;color:#90caf9">
+            <th style="padding:8px 12px;text-align:left">Stock</th>
+            <th style="padding:8px 12px;text-align:center">Country</th>
+            <th style="padding:8px 12px;text-align:center">Tax Withheld</th>
+            <th style="padding:8px 12px;text-align:center">Rate</th>
+            <th style="padding:8px 12px;text-align:left">Action in Tax Return</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #1e2a45"><td style="padding:8px 12px;color:#e0e0e0">Apple</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:#ff9800">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross dividend · DA-1 to offset 15%</td></tr>
+          <tr style="border-bottom:1px solid #1e2a45;background:#0a1628"><td style="padding:8px 12px;color:#e0e0e0">Microsoft</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:#ff9800">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross dividend · DA-1 to offset 15%</td></tr>
+          <tr style="border-bottom:1px solid #1e2a45"><td style="padding:8px 12px;color:#e0e0e0">Johnson &amp; Johnson</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:#ff9800">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross dividend · DA-1 to offset 15%</td></tr>
+          <tr style="border-bottom:1px solid #1e2a45;background:#0a1628"><td style="padding:8px 12px;color:#e0e0e0">Nvidia</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:#ff9800">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross dividend · DA-1 to offset 15%</td></tr>
+          <tr style="border-bottom:1px solid #1e2a45"><td style="padding:8px 12px;color:#e0e0e0">Alphabet (Google)</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:#ff9800">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross dividend · DA-1 to offset 15%</td></tr>
+          <tr style="border-bottom:1px solid #1e2a45;background:#0a1628"><td style="padding:8px 12px;color:#e0e0e0">Oracle</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:#ff9800">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross dividend · DA-1 to offset 15%</td></tr>
+          <tr style="border-bottom:1px solid #1e2a45"><td style="padding:8px 12px;color:#e0e0e0">Eli Lilly</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:#ff9800">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross dividend · DA-1 to offset 15%</td></tr>
+          <tr style="border-bottom:1px solid #1e2a45;background:#0a1628"><td style="padding:8px 12px;color:#e0e0e0">HDFC Bank (ADR)</td><td style="padding:8px 12px;text-align:center">🇮🇳 India</td><td style="padding:8px 12px;text-align:center;color:#ff9800">20%</td><td style="padding:8px 12px;text-align:center">20% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross dividend · DA-1 for partial offset (check treaty)</td></tr>
+          <tr style="border-bottom:1px solid #1e2a45"><td style="padding:8px 12px;color:#e0e0e0">Novartis</td><td style="padding:8px 12px;text-align:center">🇨🇭 Switzerland</td><td style="padding:8px 12px;text-align:center;color:#4caf50">35%</td><td style="padding:8px 12px;text-align:center">35% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross · tick Verrechnungssteuer box → get 35% refunded ✓</td></tr>
+          <tr style="background:#0a1628"><td style="padding:8px 12px;color:#b0b0b0">ETFs (IE/LU domiciled)</td><td style="padding:8px 12px;text-align:center">🇮🇪🇱🇺</td><td style="padding:8px 12px;text-align:center;color:#64b5f6">varies</td><td style="padding:8px 12px;text-align:center">0–15%</td><td style="padding:8px 12px;color:#b0b0b0">ETFs typically reinvest — no dividend declared. If distributing, declare gross.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="margin-top:24px;padding:16px;background:#111827;border-radius:6px;border-left:3px solid #e94560;font-size:12px;color:#666;line-height:1.7">
+    <strong style="color:#888">Disclaimer:</strong> This is a general guide based on standard Swiss tax rules for private investors in Zurich as of 2025/2026.
+    Tax laws change and individual circumstances vary. For your official Steuererklärung, always verify with the
+    <a href="https://www.steueramt.zh.ch" target="_blank" style="color:#64b5f6">Zurich Cantonal Tax Office (steueramt.zh.ch)</a>
+    or a licensed Swiss tax advisor (Treuhänder). This dashboard does not constitute tax advice.
+  </div>
+
+</div>
+
 <!-- ── Tab 7: Asset Info ── -->
 <div id="t7" class="tab-content">
   <h2>Asset Info</h2>
@@ -674,6 +832,7 @@ function loadCSV() {
       buildTable();
       applyFilters();
       buildT1Summary();
+      buildT9Summary();
       buildPortfolio();
     })
     .catch(err => {
@@ -858,6 +1017,103 @@ function buildT1Summary() {
       ${pnl != null ? card('Total P&L', pnl, pnl>=0?'#4caf50':'#e94560', (pnl>=0?'+':'')+((pnl/invested)*100).toFixed(1)+'% on invested') : ''}
     </div>`;
   el.style.display = 'block';
+}
+
+function buildT9Summary() {
+  const el = document.getElementById('t9cards');
+  if (!el || !allRows.length) return;
+
+  // Reuse fxMap + toChf logic
+  const fxMap = {};
+  allRows.forEach(r => {
+    if (!r.fx || !parseFloat(r.fx)) return;
+    const rate = parseFloat(r.fx);
+    const date = r.dtd.split(' ')[0];
+    const d = r.desc.toLowerCase();
+    if ((d.startsWith('fx debit') || d.startsWith('fx credit')) && r.chgCcy !== 'CHF')
+      fxMap[date + '|' + r.chgCcy] = rate;
+  });
+  function toChf(amount, ccy, dateStr) {
+    if (ccy === 'CHF') return amount;
+    const key = dateStr + '|' + ccy;
+    let rate = fxMap[key];
+    if (!rate) {
+      const [dd,mm,yyyy] = dateStr.split('-');
+      const t = new Date(+yyyy,+mm-1,+dd).getTime();
+      let bestDiff = 30*86400000;
+      for (const [k,v] of Object.entries(fxMap)) {
+        if (!k.endsWith('|'+ccy)) continue;
+        const [d2,m2,y2] = k.split('|')[0].split('-');
+        const diff = Math.abs(new Date(+y2,+m2-1,+d2).getTime()-t);
+        if (diff < bestDiff) { bestDiff = diff; rate = v; }
+      }
+    }
+    return rate ? amount / rate : null;
+  }
+
+  // Compute by year
+  const byYear = {};
+  let novTaxChf = 0, usTaxChf = 0, novGrossChf = 0, usGrossChf = 0;
+
+  allRows.forEach(r => {
+    const d = r.desc.toLowerCase();
+    const date = r.dtd.split(' ')[0];
+    const n = r.chgN || 0;
+    const yr = r.dtd ? r.dtd.substring(6,10) : null;
+    if (!yr) return;
+    if (!byYear[yr]) byYear[yr] = { divGross:0, taxChf:0, portfolioDate:null };
+
+    // Gross dividend = dividend + its tax (both sides)
+    if (r.dtype === 'dividend' && !d.includes('tax') && n > 0) {
+      const chf = toChf(n, r.chgCcy, date);
+      if (chf) { byYear[yr].divGross += chf; }
+    }
+    // Dividend tax
+    if (d.includes('dividend tax') && n < 0) {
+      const chf = toChf(Math.abs(n), r.chgCcy, date);
+      if (chf) byYear[yr].taxChf += chf;
+    }
+    // Novartis specific (CHF tax)
+    if (d.includes('dividend tax') && r.chgCcy === 'CHF' && n < 0) novTaxChf += Math.abs(n);
+    // US tax (USD)
+    if (d.includes('dividend tax') && r.chgCcy === 'USD' && n < 0) {
+      const chf = toChf(Math.abs(n), 'USD', date);
+      if (chf) usTaxChf += chf;
+    }
+  });
+
+  // gross dividends = net received + tax paid (add tax back)
+  // Novartis gross = net + 35% (means gross = net/0.65)
+  // US gross = net/0.85
+  novGrossChf = novTaxChf > 0 ? novTaxChf / 0.35 : 0;
+  usGrossChf  = usTaxChf  > 0 ? usTaxChf  / 0.15 : 0;
+
+  // Update inline tax figures
+  const novEl = document.getElementById('t9novtax');
+  const usEl  = document.getElementById('t9ustax');
+  if (novEl) novEl.innerHTML = `Your Novartis tax paid so far: <strong>CHF ${novTaxChf.toFixed(2)}</strong> → estimated gross dividend: <strong>CHF ${novGrossChf.toFixed(2)}</strong>. Declare the gross, get CHF ${novTaxChf.toFixed(2)} refunded.`;
+  if (usEl)  usEl.innerHTML  = `Your US withholding tax paid so far: <strong>CHF ${usTaxChf.toFixed(2)}</strong> → estimated US gross dividends: <strong>CHF ${usGrossChf.toFixed(2)}</strong>. File DA-1 to offset the 15%.`;
+
+  // Summary cards
+  const years = Object.keys(byYear).sort();
+  const totalDivGross = years.reduce((s,y) => s+byYear[y].divGross, 0);
+  const totalTax = years.reduce((s,y) => s+byYear[y].taxChf, 0);
+  const portfolioVal = p3Rows.reduce((s,r) => s + (r.currentVal||0), 0);
+
+  function card(icon, label, val, color, sub) {
+    return `<div style="background:#16213e;border:1px solid #0f3460;border-radius:8px;padding:14px 18px">
+      <div style="font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">${icon} ${label}</div>
+      <div style="font-size:18px;font-weight:700;color:${color}">${val}</div>
+      ${sub ? `<div style="font-size:10px;color:#555;margin-top:3px">${sub}</div>` : ''}
+    </div>`;
+  }
+
+  el.innerHTML =
+    card('📥','Gross Dividends to Declare', 'CHF '+fmtN(totalDivGross+totalTax), '#64b5f6', 'net received + tax withheld = gross') +
+    card('💸','Tax Withheld (total)', 'CHF '+fmtN(totalTax), '#e94560', 'amount already deducted by DEGIRO') +
+    card('🇨🇭','Novartis Verrechnungssteuer', 'CHF '+fmtN(novTaxChf), '#4caf50', 'declare gross → get 35% refunded') +
+    card('🇺🇸','US Withholding (DA-1)', 'CHF '+fmtN(usTaxChf), '#ff9800', 'file DA-1 to offset against Swiss tax') +
+    (portfolioVal > 0 ? card('🏛️','Portfolio Value (31 Dec estimate)', 'CHF '+fmtN(portfolioVal), '#e0e0e0', 'declare as wealth (Vermögen)') : '');
 }
 
 function buildTable() {
@@ -1395,6 +1651,7 @@ async function fetchLivePrices() {
 
   renderP3Table();
   buildT1Summary(); // refresh P&L and portfolio value in summary panel
+  buildT9Summary(); // refresh tax guide numbers
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1631,6 +1888,7 @@ function wireControls() {
     if (t.dataset.tab === 't5' && allRows.length) renderDivSummary();
     if (t.dataset.tab === 't6' && allRows.length) buildReturns();
     if (t.dataset.tab === 't7') initAssetInfo();
+    if (t.dataset.tab === 't9' && allRows.length) buildT9Summary();
   }));
 }
 
