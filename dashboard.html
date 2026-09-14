@@ -1201,18 +1201,20 @@ function buildT10() {
         y.divByStock[stock].ccy = r.chgCcy;
       }
     }
-    // Dividend tax
-    if (d.includes('dividend tax') && n < 0) {
-      const chf = toChf(Math.abs(n), r.chgCcy, date);
-      if (chf) {
-        y.taxChf += chf;
+    // Dividend tax — process ALL rows (positive = reversal/credit, negative = tax deducted)
+    if (d.includes('dividend tax') && n !== 0) {
+      const absChf = toChf(Math.abs(n), r.chgCcy, date);
+      if (absChf) {
+        const signedChf = n < 0 ? absChf : -absChf; // positive = tax paid, negative = reversal
+        const signedN   = n < 0 ? Math.abs(n) : -Math.abs(n);
+        y.taxChf += signedChf;
         const stock = r.product || 'Unknown';
         if (!y.divByStock[stock]) y.divByStock[stock] = {net:0, tax:0, origNet:0, origTax:0, ccy:r.chgCcy};
-        y.divByStock[stock].tax += chf;
-        y.divByStock[stock].origTax += Math.abs(n);
+        y.divByStock[stock].tax += signedChf;
+        y.divByStock[stock].origTax += signedN;
         if (!y.divByStock[stock].ccy) y.divByStock[stock].ccy = r.chgCcy;
-        if (r.chgCcy === 'CHF') y.novTaxChf += Math.abs(n);
-        if (r.chgCcy === 'USD') y.usTaxChf += chf;
+        if (r.chgCcy === 'CHF') y.novTaxChf += signedN;
+        if (r.chgCcy === 'USD') y.usTaxChf += signedChf;
       }
     }
   });
