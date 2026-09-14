@@ -1243,7 +1243,10 @@ function buildT10() {
   sortedYears.forEach(yr => {
     const y = years[yr];
     const isCurrent = yr === thisYear;
-    const grossDiv = y.divNet + y.taxChf; // gross = net received + tax withheld
+    // Sum per-stock gross: CHF stocks use net (dividend row IS the gross);
+    // USD/EUR stocks add back tax to reconstruct gross for Swiss tax declaration
+    const grossDiv = Object.values(y.divByStock)
+      .reduce((s, v) => s + (v.ccy === 'CHF' ? v.net : v.net + v.tax), 0);
     const novGross = y.novTaxChf > 0 ? y.novTaxChf / 0.35 : 0;
 
     // Per-stock dividend table
