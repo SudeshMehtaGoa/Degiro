@@ -1155,7 +1155,7 @@ function buildT10() {
     if (!rate) {
       const [dd,mm,yyyy] = dateStr.split('-');
       const t = new Date(+yyyy,+mm-1,+dd).getTime();
-      let bestDiff = 30*86400000;
+      let bestDiff = 8*86400000; // 7-day window — same as Dividends tab
       for (const [k,v] of Object.entries(fxMap)) {
         if (!k.endsWith('|'+ccy)) continue;
         const [d2,m2,y2] = k.split('|')[0].split('-');
@@ -1949,14 +1949,16 @@ function buildDividends(rawRows) {
   });
 
   // Step 3 — convert to CHF using actual FX rates
+  // Note: grossOrig = NET amount DEGIRO credits (after withholding), taxOrig = negative (withheld)
+  // True gross to declare = grossOrig + |taxOrig|; net received = grossOrig
   return Object.values(groups)
     .filter(g => g.grossOrig > 0.001)
     .map(g => {
       const rate = getRate(g.date, g.currency);
-      const toChf = v => rate != null ? v / rate : null;
-      const grossChf = g.currency === 'CHF' ? g.grossOrig : toChf(g.grossOrig);
-      const taxChf   = g.currency === 'CHF' ? g.taxOrig   : toChf(g.taxOrig);
-      const netChf   = (grossChf != null && taxChf != null) ? grossChf + taxChf : grossChf;
+      const cvt  = v => g.currency === 'CHF' ? v : (rate != null ? v / rate : null);
+      const netChf   = cvt(g.grossOrig);         // what you actually received
+      const taxChf   = cvt(g.taxOrig);            // negative (withheld)
+      const grossChf = (netChf != null && taxChf != null) ? netChf - taxChf : netChf; // true gross (netChf + |tax|)
       return { ...g, grossChf, taxChf, netChf };
     })
     .sort((a, b) => b.dateSort.localeCompare(a.dateSort));
