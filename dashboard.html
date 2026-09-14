@@ -648,6 +648,11 @@
 
   <div class="controls">
     <div><label>Search all columns:&nbsp;</label><input type="text" id="gs" placeholder="Type to search…"></div>
+    <div><label>Year:&nbsp;</label>
+      <select id="yf">
+        <option value="">All</option>
+      </select>
+    </div>
     <div><label>Type:&nbsp;</label>
       <select id="tf">
         <option value="">All types</option>
@@ -837,6 +842,10 @@ function loadCSV() {
         `${allRows.length} transactions loaded from Account.csv${span ? '  ·  ' + span : ''}`;
       document.getElementById('fileMeta').textContent = `Last loaded: ${new Date().toLocaleTimeString()}`;
       p2Rows = []; p3Rows = []; p4Rows = []; // reset so all tabs rebuild from fresh data
+      // Populate year filter from actual data
+      const years = [...new Set(allRows.map(r => r.dtd.split('-')[2].split(' ')[0]).filter(y => y && y.length === 4))].sort();
+      const yf = document.getElementById('yf');
+      yf.innerHTML = '<option value="">All</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
       buildTable();
       applyFilters();
       buildT1Summary();
@@ -1379,6 +1388,7 @@ function cells(r) {
 
 function applyFilters() {
   const gs   = document.getElementById('gs').value.toLowerCase();
+  const yf   = document.getElementById('yf').value;
   const tf   = document.getElementById('tf').value;
   const cf   = document.getElementById('cf').value.toUpperCase();
   const colF = Array.from(document.querySelectorAll('.fr input')).map(i => i.value.toLowerCase());
@@ -1386,6 +1396,7 @@ function applyFilters() {
   filteredRows = allRows.filter(r => {
     const c = cells(r);
     if (gs && !c.some(x => x.toLowerCase().includes(gs))) return false;
+    if (yf && r.dtd.split('-')[2].split(' ')[0] !== yf)   return false;
     if (tf && !r.dtype.startsWith(tf))                    return false;
     if (cf && r.chgCcy !== cf)                            return false;
     for (let i = 0; i < colF.length; i++)
@@ -2072,6 +2083,7 @@ function renderDivSummary() {
 // ── Wire static controls ─────────────────────────────────
 function wireControls() {
   document.getElementById('gs').addEventListener('input', applyFilters);
+  document.getElementById('yf').addEventListener('change', applyFilters);
   document.getElementById('tf').addEventListener('change', applyFilters);
   document.getElementById('cf').addEventListener('change', applyFilters);
   document.getElementById('ps').addEventListener('change', () => {
@@ -2080,6 +2092,7 @@ function wireControls() {
   });
   document.getElementById('clrBtn').addEventListener('click', () => {
     document.getElementById('gs').value = '';
+    document.getElementById('yf').value = '';
     document.getElementById('tf').value = '';
     document.getElementById('cf').value = '';
     document.querySelectorAll('.fr input').forEach(i => i.value = '');
