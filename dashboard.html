@@ -9,16 +9,16 @@
       /* Page */
       --bg:          #f5f5f5;
       --bg-card:     #ffffff;
-      --bg-nav:      #1a1a1a;
-      --bg-hdr:      #212121;
+      --bg-nav:      #005584;
+      --bg-hdr:      #005584;
       --bg-row-alt:  #f9f9f9;
       --bg-hover:    #f0f0f0;
       --bg-input:    #ffffff;
       --bg-inset:    #f0f2f5;
       /* Borders */
       --border:      #e2e2e2;
-      --border-nav:  #333333;
-      --border-hdr:  #333333;
+      --border-nav:  #003d61;
+      --border-hdr:  #003d61;
       /* Text */
       --text:        #1a1a1a;
       --text-hdr:    #f0f0f0;
@@ -39,7 +39,7 @@
       --teal:        #065f46;
       --teal-bg:     #d1fae5;
       /* Accent (buttons, active tabs) */
-      --accent:      #1a1a1a;
+      --accent:      #005584;
       --accent-hl:   #f59e0b;
     }
 
@@ -49,7 +49,7 @@
     /* ── Tab bar ── */
     .tab-bar { display: flex; position: sticky; top: 0; z-index: 10; background: var(--bg-nav); border-bottom: 2px solid var(--border-nav); align-items: center; }
     .tab { padding: 12px 28px; cursor: pointer; color: var(--text-2); border-bottom: 3px solid transparent; transition: all .2s; font-weight: 500; }
-    .tab:hover { color: var(--text-hdr); background: #2d2d2d; }
+    .tab:hover { color: var(--text-hdr); background: #006da8; }
     .tab.active { color: var(--accent-hl); border-bottom-color: var(--accent-hl); background: var(--bg-nav); }
     .tab-bar .meta { margin-left: auto; padding-right: 16px; font-size: 11px; color: #555; }
 
@@ -66,7 +66,7 @@
     .controls label { color: var(--text-2); font-size: 12px; }
     .controls select { padding: 6px 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); }
     .btn { padding: 6px 14px; border-radius: 4px; border: none; background: var(--bg-hdr); color: var(--text-hdr); cursor: pointer; font-size: 12px; }
-    .btn:hover { background: #333; }
+    .btn:hover { background: #006da8; }
     .info { color: var(--text-2); font-size: 12px; margin-left: auto; }
 
     /* ── Table ── */
@@ -82,7 +82,7 @@
     thead th .th-lbl {
       padding: 8px 10px; cursor: pointer; display: block;
     }
-    thead th .th-lbl:hover { background: #333; }
+    thead th .th-lbl:hover { background: #006da8; }
     thead th .si { margin-left: 4px; opacity: 0.4; font-size: 10px; }
     thead th.sa .si::after { content: '▲'; opacity: 1; }
     thead th.sd .si::after { content: '▼'; opacity: 1; }
@@ -94,7 +94,7 @@
     thead th .th-flt { padding: 2px 6px 5px; display: block; }
     thead th .th-flt input {
       width: 100%; padding: 3px 6px; border-radius: 3px;
-      border: 1px solid #444; background: #2d2d2d; color: var(--text-hdr);
+      border: 1px solid #003d61; background: #003d61; color: var(--text-hdr);
       font-size: 11px; box-sizing: border-box; cursor: text;
     }
     thead th .th-flt input:focus { outline: none; border-color: var(--accent-hl); }
