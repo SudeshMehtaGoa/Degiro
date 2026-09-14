@@ -5,14 +5,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DEGIRO Dashboard</title>
   <style>
+    :root {
+      /* Page */
+      --bg:          #f5f5f5;
+      --bg-card:     #ffffff;
+      --bg-nav:      #1a1a1a;
+      --bg-hdr:      #212121;
+      --bg-row-alt:  #f9f9f9;
+      --bg-hover:    #f0f0f0;
+      --bg-input:    #ffffff;
+      --bg-inset:    #f0f2f5;
+      /* Borders */
+      --border:      #e2e2e2;
+      --border-nav:  #333333;
+      --border-hdr:  #333333;
+      /* Text */
+      --text:        #1a1a1a;
+      --text-hdr:    #f0f0f0;
+      --text-2:      #6b7280;
+      --text-muted:  #9ca3af;
+      /* Semantic */
+      --pos:         #15803d;
+      --pos-bg:      #dcfce7;
+      --neg:         #dc2626;
+      --neg-bg:      #fee2e2;
+      --warn:        #b45309;
+      --warn-bg:     #fef3c7;
+      --info:        #1d4ed8;
+      --info-bg:     #dbeafe;
+      --info-light:  #93c5fd;
+      --purple:      #6d28d9;
+      --purple-bg:   #ede9fe;
+      --teal:        #065f46;
+      --teal-bg:     #d1fae5;
+      /* Accent (buttons, active tabs) */
+      --accent:      #1a1a1a;
+      --accent-hl:   #f59e0b;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #e0e0e0; font-size: 13px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 13px; }
 
     /* ── Tab bar ── */
-    .tab-bar { display: flex; position: sticky; top: 0; z-index: 10; background: #16213e; border-bottom: 2px solid #0f3460; align-items: center; }
-    .tab { padding: 12px 28px; cursor: pointer; color: #888; border-bottom: 3px solid transparent; transition: all .2s; font-weight: 500; }
-    .tab:hover { color: #fff; background: #0f3460; }
-    .tab.active { color: #e94560; border-bottom-color: #e94560; background: #1a1a2e; }
+    .tab-bar { display: flex; position: sticky; top: 0; z-index: 10; background: var(--bg-nav); border-bottom: 2px solid var(--border-nav); align-items: center; }
+    .tab { padding: 12px 28px; cursor: pointer; color: var(--text-2); border-bottom: 3px solid transparent; transition: all .2s; font-weight: 500; }
+    .tab:hover { color: var(--text-hdr); background: #2d2d2d; }
+    .tab.active { color: var(--accent-hl); border-bottom-color: var(--accent-hl); background: var(--bg-nav); }
     .tab-bar .meta { margin-left: auto; padding-right: 16px; font-size: 11px; color: #555; }
 
     .tab-content { display: none; padding: 16px; }
@@ -21,15 +59,15 @@
     /* ── Controls ── */
     .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; align-items: center; }
     .controls input[type=text] {
-      padding: 6px 10px; border-radius: 4px; border: 1px solid #0f3460;
-      background: #16213e; color: #e0e0e0; width: 220px;
+      padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border);
+      background: var(--bg-input); color: var(--text); width: 220px;
     }
-    .controls input[type=text]:focus { outline: none; border-color: #e94560; }
-    .controls label { color: #aaa; font-size: 12px; }
-    .controls select { padding: 6px 8px; border-radius: 4px; border: 1px solid #0f3460; background: #16213e; color: #e0e0e0; }
-    .btn { padding: 6px 14px; border-radius: 4px; border: none; background: #e94560; color: #fff; cursor: pointer; font-size: 12px; }
-    .btn:hover { background: #c73652; }
-    .info { color: #888; font-size: 12px; margin-left: auto; }
+    .controls input[type=text]:focus { outline: none; border-color: var(--accent-hl); }
+    .controls label { color: var(--text-2); font-size: 12px; }
+    .controls select { padding: 6px 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); }
+    .btn { padding: 6px 14px; border-radius: 4px; border: none; background: var(--bg-hdr); color: var(--text-hdr); cursor: pointer; font-size: 12px; }
+    .btn:hover { background: #333; }
+    .info { color: var(--text-2); font-size: 12px; margin-left: auto; }
 
     /* ── Table ── */
     .table-wrap { border-radius: 6px; }
@@ -37,97 +75,97 @@
     tfoot { position: sticky; bottom: 0; z-index: 2; }
 
     thead th {
-      background: #0f3460; color: #e0e0e0; padding: 0;
+      background: var(--bg-hdr); color: var(--text-hdr); padding: 0;
       text-align: left; white-space: nowrap; user-select: none; vertical-align: top;
     }
     .table-wrap thead th { position: sticky; top: 80px; z-index: 2; }
     thead th .th-lbl {
       padding: 8px 10px; cursor: pointer; display: block;
     }
-    thead th .th-lbl:hover { background: #1a4a80; }
+    thead th .th-lbl:hover { background: #333; }
     thead th .si { margin-left: 4px; opacity: 0.4; font-size: 10px; }
     thead th.sa .si::after { content: '▲'; opacity: 1; }
     thead th.sd .si::after { content: '▼'; opacity: 1; }
     thead th:not(.sa):not(.sd) .si::after { content: '⇅'; }
     thead th .th-sub {
-      padding: 1px 10px 2px; font-size: 11px; color: #4caf50; font-weight: 600;
+      padding: 1px 10px 2px; font-size: 11px; color: var(--pos); font-weight: 600;
       min-height: 16px; display: block; white-space: nowrap;
     }
     thead th .th-flt { padding: 2px 6px 5px; display: block; }
     thead th .th-flt input {
       width: 100%; padding: 3px 6px; border-radius: 3px;
-      border: 1px solid #0f3460; background: #1a1a2e; color: #e0e0e0;
+      border: 1px solid #444; background: #2d2d2d; color: var(--text-hdr);
       font-size: 11px; box-sizing: border-box; cursor: text;
     }
-    thead th .th-flt input:focus { outline: none; border-color: #e94560; }
+    thead th .th-flt input:focus { outline: none; border-color: var(--accent-hl); }
 
-    tbody tr { border-bottom: 1px solid #1e2a45; }
-    tbody tr:hover { background: #16213e !important; }
-    tbody tr:nth-child(even) { background: #111827; }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:hover { background: var(--bg-hover) !important; }
+    tbody tr:nth-child(even) { background: var(--bg-row-alt); }
     td { padding: 6px 10px; white-space: nowrap; }
 
-    .pos { color: #4caf50; } .neg { color: #e94560; } .neu { color: #aaa; }
+    .pos { color: var(--pos); } .neg { color: var(--neg); } .neu { color: var(--text-2); }
 
     .badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; }
-    .b-buy  { background: #1a4a1a; color: #4caf50; }
-    .b-sell { background: #4a1a1a; color: #e94560; }
-    .b-div  { background: #1a3a4a; color: #29b6f6; }
-    .b-fee  { background: #3a2a1a; color: #ff9800; }
-    .b-tr   { background: #2a2a3a; color: #9c9cff; }
-    .b-fx   { background: #2a3a2a; color: #a5d6a7; }
-    .b-int  { background: #3a1a3a; color: #ce93d8; }
-    .b-oth  { background: #2a2a2a; color: #aaa;    }
+    .b-buy  { background: var(--pos-bg);    color: var(--pos);    }
+    .b-sell { background: var(--neg-bg);    color: var(--neg);    }
+    .b-div  { background: var(--info-bg);   color: var(--info);   }
+    .b-fee  { background: var(--warn-bg);   color: var(--warn);   }
+    .b-tr   { background: #f3f4f6;          color: #374151;       }
+    .b-fx   { background: var(--teal-bg);   color: var(--teal);   }
+    .b-int  { background: var(--purple-bg); color: var(--purple); }
+    .b-oth  { background: #f3f4f6;          color: var(--text-2); }
 
     .pagination { display: flex; gap: 6px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
     /* ── Investment Rules tab ── */
     .ir-section { margin-bottom:32px; }
-    .ir-title { font-size:14px;font-weight:700;color:#e94560;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #1e2a45; }
-    .ir-subtitle { font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px; }
+    .ir-title { font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--border); }
+    .ir-subtitle { font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px; }
     .ir-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px; }
-    .ir-card { background:#16213e;border:1px solid #1e2a45;border-radius:6px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start; }
-    .ir-card.ir-gold { border-left:3px solid #ff9800; }
-    .ir-card.ir-warn { border-left:3px solid #e94560; }
-    .ir-num { font-size:22px;font-weight:800;color:#0f3460;line-height:1;min-width:28px; }
-    .ir-body { font-size:12px;color:#aaa;line-height:1.7; }
-    .ir-body strong { color:#e0e0e0; }
+    .ir-card { background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start; }
+    .ir-card.ir-gold { border-left:3px solid var(--warn); }
+    .ir-card.ir-warn { border-left:3px solid var(--neg); }
+    .ir-num { font-size:22px;font-weight:800;color:var(--border);line-height:1;min-width:28px; }
+    .ir-body { font-size:12px;color:var(--text-2);line-height:1.7; }
+    .ir-body strong { color:var(--text); }
     .ir-list { list-style:none;padding:0;margin:0; }
-    .ir-list li { font-size:12px;color:#aaa;padding:5px 0;border-bottom:1px solid #111827;line-height:1.5; }
-    .ir-list li::before { content:'›';color:#e94560;margin-right:8px;font-weight:700; }
-    .ir-list li strong { color:#e0e0e0; }
+    .ir-list li { font-size:12px;color:var(--text-2);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.5; }
+    .ir-list li::before { content:'›';color:var(--text-2);margin-right:8px;font-weight:700; }
+    .ir-list li strong { color:var(--text); }
     .ir-table { width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px; }
-    .ir-table th { background:#0f3460;color:#e0e0e0;padding:8px 10px;text-align:left;font-weight:600; }
-    .ir-table td { padding:7px 10px;border-bottom:1px solid #1e2a45;color:#aaa; }
-    .ir-table tr:hover td { background:#16213e; }
+    .ir-table th { background:var(--bg-hdr);color:var(--text-hdr);padding:8px 10px;text-align:left;font-weight:600; }
+    .ir-table td { padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text-2); }
+    .ir-table tr:hover td { background:var(--bg-hover); }
 
-    .t7pb { padding:5px 12px;border-radius:4px;border:1px solid #0f3460;background:#16213e;color:#aaa;cursor:pointer;font-size:12px;font-weight:600; }
-    .t7pb:hover { background:#0f3460;color:#fff; }
-    .t7pb.active { background:#e94560;border-color:#e94560;color:#fff; }
-    .t7card { background:#16213e;border:1px solid #1e2a45;border-radius:6px;padding:12px 16px; }
-    .t7card .label { font-size:10px;color:#556;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px; }
-    .t7card .value { font-size:15px;font-weight:600;color:#e0e0e0; }
-    .t7card .sub   { font-size:11px;color:#666;margin-top:2px; }
+    .t7pb { padding:5px 12px;border-radius:4px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-2);cursor:pointer;font-size:12px;font-weight:600; }
+    .t7pb:hover { background:var(--bg-hover);color:var(--text); }
+    .t7pb.active { background:var(--bg-hdr);border-color:var(--bg-hdr);color:var(--text-hdr); }
+    .t7card { background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:12px 16px; }
+    .t7card .label { font-size:10px;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px; }
+    .t7card .value { font-size:15px;font-weight:600;color:var(--text); }
+    .t7card .sub   { font-size:11px;color:var(--text-muted);margin-top:2px; }
 
     .pagination button {
-      padding: 4px 10px; border-radius: 4px; border: 1px solid #0f3460;
-      background: #16213e; color: #e0e0e0; cursor: pointer; font-size: 12px;
+      padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border);
+      background: var(--bg-card); color: var(--text); cursor: pointer; font-size: 12px;
     }
-    .pagination button:hover { background: #0f3460; }
-    .pagination button.active { background: #e94560; border-color: #e94560; color: #fff; }
+    .pagination button:hover { background: var(--bg-hover); }
+    .pagination button.active { background: var(--bg-hdr); border-color: var(--bg-hdr); color: var(--text-hdr); }
     .pagination button:disabled { opacity: 0.4; cursor: default; }
-    .page-info { color: #888; font-size: 12px; margin-top: 8px; }
+    .page-info { color: var(--text-2); font-size: 12px; margin-top: 8px; }
 
-    h2 { font-size: 16px; color: #e94560; margin-bottom: 4px; }
-    .sub { color: #888; font-size: 12px; margin-bottom: 14px; }
-    .chf-note { font-size: 11px; color: #556; margin-bottom: 6px; text-align: right; }
+    h2 { font-size: 16px; color: var(--text); margin-bottom: 4px; }
+    .sub { color: var(--text-2); font-size: 12px; margin-bottom: 14px; }
+    .chf-note { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; text-align: right; }
 
     /* ── Loading / error ── */
-    .loading { padding: 40px; text-align: center; color: #555; font-size: 14px; }
+    .loading { padding: 40px; text-align: center; color: var(--text-2); font-size: 14px; }
     .error-box {
       margin: 20px; padding: 20px; border-radius: 8px;
-      background: #2a1a1a; border: 1px solid #e94560; color: #e94560;
+      background: var(--neg-bg); border: 1px solid var(--neg); color: var(--neg);
       font-size: 13px; line-height: 1.7;
     }
-  </style>
+    </style>
 </head>
 <body>
 
@@ -151,8 +189,8 @@
   <p class="sub">Annualised return per asset — accounts for purchase dates, dividend income, and current market value</p>
   <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
     <button class="btn" onclick="buildReturns()">&#8635; Refresh</button>
-    <input type="text" id="p6gs" placeholder="Search asset…" style="padding:6px 10px;border-radius:4px;border:1px solid #0f3460;background:#16213e;color:#e0e0e0;width:200px">
-    <span id="p6status" style="font-size:12px;color:#888"></span>
+    <input type="text" id="p6gs" placeholder="Search asset…" style="padding:6px 10px;border-radius:4px;border:1px solid var(--border);background:var(--bg-input);color:var(--text);width:200px">
+    <span id="p6status" style="font-size:12px;color:var(--text-2)"></span>
   </div>
   <div id="p6bench" style="margin-bottom:18px"></div>
   <p class="chf-note">* All values are in CHF</p>
@@ -318,7 +356,7 @@
           <tr><td>Free Cash Flow</td><td>Real cash generated after capex</td><td class="pos">Positive &amp; growing</td><td class="neu">Positive, flat</td><td class="neg">Negative</td></tr>
         </tbody>
       </table>
-      <div style="font-size:11px;color:#445;margin-top:8px">* Ranges are general guidelines. Always compare within the same industry — a bank naturally has higher debt than a software company.</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:8px">* Ranges are general guidelines. Always compare within the same industry — a bank naturally has higher debt than a software company.</div>
     </div>
 
     <!-- ── ETF checklist ── -->
@@ -450,8 +488,8 @@
       </ul>
     </div>
 
-    <div style="margin-top:32px;padding:16px;background:#111827;border-radius:6px;border-left:3px solid #e94560;font-size:12px;color:#666;line-height:1.7">
-      <strong style="color:#888">Disclaimer:</strong> These rules are for educational reference only and do not constitute financial advice.
+    <div style="margin-top:32px;padding:16px;background:var(--neg-bg);border-radius:6px;border-left:3px solid var(--neg);font-size:12px;color:var(--text-2);line-height:1.7">
+      <strong style="color:var(--text)">Disclaimer:</strong> These rules are for educational reference only and do not constitute financial advice.
       Every investor's situation is different. Past performance does not guarantee future results.
       For decisions involving significant capital, consult a licensed financial advisor.
     </div>
@@ -473,29 +511,29 @@
     <div class="ir-section">
       <div class="ir-title">✅ WHAT YOU MUST DECLARE</div>
 
-      <div style="margin-bottom:16px;padding:14px;background:#0a1628;border-radius:6px;border-left:3px solid #4caf50">
-        <div style="font-weight:700;color:#4caf50;margin-bottom:8px;font-size:13px">1. All Dividends Received (Wertschriftenerträge)</div>
-        <p style="font-size:12px;color:#b0b0b0;line-height:1.7;margin:0">
-          Declare the <strong style="color:#e0e0e0">gross dividend</strong> — i.e. the full amount <em>before</em> any withholding tax was deducted.
+      <div style="margin-bottom:16px;padding:14px;background:var(--pos-bg);border-radius:6px;border-left:3px solid var(--pos)">
+        <div style="font-weight:700;color:var(--pos);margin-bottom:8px;font-size:13px">1. All Dividends Received (Wertschriftenerträge)</div>
+        <p style="font-size:12px;color:var(--text-2);line-height:1.7;margin:0">
+          Declare the <strong style="color:var(--text)">gross dividend</strong> — i.e. the full amount <em>before</em> any withholding tax was deducted.
           DEGIRO shows you both rows in the CSV: the gross dividend credit and the tax debit.
           Add them together = gross amount to declare.<br><br>
-          In your Steuererklärung → <strong style="color:#64b5f6">Wertschriftenverzeichnis (Formular 3)</strong> → column "Ertrag"
+          In your Steuererklärung → <strong style="color:var(--info)">Wertschriftenverzeichnis (Formular 3)</strong> → column "Ertrag"
         </p>
       </div>
 
-      <div style="margin-bottom:16px;padding:14px;background:#0a1628;border-radius:6px;border-left:3px solid #4caf50">
-        <div style="font-weight:700;color:#4caf50;margin-bottom:8px;font-size:13px">2. Portfolio Value on 31 December (Vermögen)</div>
-        <p style="font-size:12px;color:#b0b0b0;line-height:1.7;margin:0">
-          The market value of all your holdings at year-end is taxable as <strong style="color:#e0e0e0">wealth (Vermögen)</strong>.
+      <div style="margin-bottom:16px;padding:14px;background:var(--pos-bg);border-radius:6px;border-left:3px solid var(--pos)">
+        <div style="font-weight:700;color:var(--pos);margin-bottom:8px;font-size:13px">2. Portfolio Value on 31 December (Vermögen)</div>
+        <p style="font-size:12px;color:var(--text-2);line-height:1.7;margin:0">
+          The market value of all your holdings at year-end is taxable as <strong style="color:var(--text)">wealth (Vermögen)</strong>.
           DEGIRO sends an annual statement (Jahresabschluss) — use the values there.<br><br>
-          In your Steuererklärung → <strong style="color:#64b5f6">Wertschriftenverzeichnis (Formular 3)</strong> → column "Kurswert am 31.12."<br><br>
-          <span style="color:#ff9800">Zurich wealth tax rate: approx. 0.05%–0.3% of net wealth above exemption thresholds.</span>
+          In your Steuererklärung → <strong style="color:var(--info)">Wertschriftenverzeichnis (Formular 3)</strong> → column "Kurswert am 31.12."<br><br>
+          <span style="color:var(--warn)">Zurich wealth tax rate: approx. 0.05%–0.3% of net wealth above exemption thresholds.</span>
         </p>
       </div>
 
-      <div style="margin-bottom:16px;padding:14px;background:#0a1628;border-radius:6px;border-left:3px solid #4caf50">
-        <div style="font-weight:700;color:#4caf50;margin-bottom:8px;font-size:13px">3. DEGIRO Account Balance on 31 December</div>
-        <p style="font-size:12px;color:#b0b0b0;line-height:1.7;margin:0">
+      <div style="margin-bottom:16px;padding:14px;background:var(--pos-bg);border-radius:6px;border-left:3px solid var(--pos)">
+        <div style="font-weight:700;color:var(--pos);margin-bottom:8px;font-size:13px">3. DEGIRO Account Balance on 31 December</div>
+        <p style="font-size:12px;color:var(--text-2);line-height:1.7;margin:0">
           Any uninvested cash sitting in your DEGIRO account counts as a bank balance and must be declared as wealth.
           Include it in the Wertschriftenverzeichnis or the bank accounts section.
         </p>
@@ -506,27 +544,27 @@
     <div class="ir-section">
       <div class="ir-title">🚫 WHAT YOU DO NOT DECLARE</div>
 
-      <div style="margin-bottom:16px;padding:14px;background:#0a1628;border-radius:6px;border-left:3px solid #e94560">
-        <div style="font-weight:700;color:#e94560;margin-bottom:8px;font-size:13px">Capital Gains are TAX FREE 🎉</div>
-        <p style="font-size:12px;color:#b0b0b0;line-height:1.7;margin:0">
-          In Switzerland, profits from selling stocks and ETFs are <strong style="color:#4caf50">completely tax-free</strong> for private investors.
+      <div style="margin-bottom:16px;padding:14px;background:var(--neg-bg);border-radius:6px;border-left:3px solid var(--neg)">
+        <div style="font-weight:700;color:var(--neg);margin-bottom:8px;font-size:13px">Capital Gains are TAX FREE 🎉</div>
+        <p style="font-size:12px;color:var(--text-2);line-height:1.7;margin:0">
+          In Switzerland, profits from selling stocks and ETFs are <strong style="color:var(--pos)">completely tax-free</strong> for private investors.
           You do <em>not</em> need to declare gains from selling Apple, Nvidia, or any of your holdings.<br><br>
-          <strong style="color:#ff9800">Exception:</strong> If you trade very frequently (professional trader status), Swiss tax authorities can reclassify you as a professional trader and tax your gains. As a long-term investor this does not apply to you.
+          <strong style="color:var(--warn)">Exception:</strong> If you trade very frequently (professional trader status), Swiss tax authorities can reclassify you as a professional trader and tax your gains. As a long-term investor this does not apply to you.
         </p>
       </div>
 
-      <div style="margin-bottom:16px;padding:14px;background:#0a1628;border-radius:6px;border-left:3px solid #e94560">
-        <div style="font-weight:700;color:#e94560;margin-bottom:8px;font-size:13px">DEGIRO Transaction Fees</div>
-        <p style="font-size:12px;color:#b0b0b0;line-height:1.7;margin:0">
-          Brokerage fees are <strong style="color:#e0e0e0">not deductible</strong> in Switzerland for private investors (unlike in some other countries).
+      <div style="margin-bottom:16px;padding:14px;background:var(--neg-bg);border-radius:6px;border-left:3px solid var(--neg)">
+        <div style="font-weight:700;color:var(--neg);margin-bottom:8px;font-size:13px">DEGIRO Transaction Fees</div>
+        <p style="font-size:12px;color:var(--text-2);line-height:1.7;margin:0">
+          Brokerage fees are <strong style="color:var(--text)">not deductible</strong> in Switzerland for private investors (unlike in some other countries).
           You cannot offset your CHF 87.82 in DEGIRO fees against your taxable income. Simply ignore them for tax purposes.
         </p>
       </div>
 
-      <div style="margin-bottom:16px;padding:14px;background:#0a1628;border-radius:6px;border-left:3px solid #e94560">
-        <div style="font-weight:700;color:#e94560;margin-bottom:8px;font-size:13px">FX Gains / Losses</div>
-        <p style="font-size:12px;color:#b0b0b0;line-height:1.7;margin:0">
-          Currency gains (e.g. USD appreciated vs CHF while you held a stock) are treated the same as capital gains — <strong style="color:#4caf50">tax-free</strong> for private investors. No need to track or declare FX gains.
+      <div style="margin-bottom:16px;padding:14px;background:var(--neg-bg);border-radius:6px;border-left:3px solid var(--neg)">
+        <div style="font-weight:700;color:var(--neg);margin-bottom:8px;font-size:13px">FX Gains / Losses</div>
+        <p style="font-size:12px;color:var(--text-2);line-height:1.7;margin:0">
+          Currency gains (e.g. USD appreciated vs CHF while you held a stock) are treated the same as capital gains — <strong style="color:var(--pos)">tax-free</strong> for private investors. No need to track or declare FX gains.
         </p>
       </div>
     </div>
@@ -537,25 +575,25 @@
     <div class="ir-title">💰 TAXES YOU CAN RECLAIM</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
 
-      <div style="padding:16px;background:#0a1628;border-radius:6px;border-left:3px solid #ff9800">
-        <div style="font-weight:700;color:#ff9800;margin-bottom:8px;font-size:13px">🇨🇭 Novartis — Swiss Verrechnungssteuer (35%)</div>
-        <p style="font-size:12px;color:#b0b0b0;line-height:1.7;margin:0">
-          Switzerland withholds <strong style="color:#e0e0e0">35%</strong> on all Swiss company dividends (Novartis, Nestlé, Roche etc.).
+      <div style="padding:16px;background:var(--warn-bg);border-radius:6px;border-left:3px solid var(--warn)">
+        <div style="font-weight:700;color:var(--warn);margin-bottom:8px;font-size:13px">🇨🇭 Novartis — Swiss Verrechnungssteuer (35%)</div>
+        <p style="font-size:12px;color:var(--text-2);line-height:1.7;margin:0">
+          Switzerland withholds <strong style="color:var(--text)">35%</strong> on all Swiss company dividends (Novartis, Nestlé, Roche etc.).
           This is a security deposit — Switzerland assumes you might not declare it. When you declare the gross dividend in your Steuererklärung, you get the full 35% back.<br><br>
-          <strong style="color:#4caf50">Action:</strong> In Formular 3 (Wertschriftenverzeichnis), tick the box "Verrechnungssteuer zurückfordern" and enter the gross Novartis dividend.
+          <strong style="color:var(--pos)">Action:</strong> In Formular 3 (Wertschriftenverzeichnis), tick the box "Verrechnungssteuer zurückfordern" and enter the gross Novartis dividend.
           The refund is paid out when your tax assessment is finalised — usually 6–18 months later.<br><br>
-          <span id="t9novtax" style="color:#ff9800;font-weight:600"></span>
+          <span id="t9novtax" style="color:var(--warn);font-weight:600"></span>
         </p>
       </div>
 
-      <div style="padding:16px;background:#0a1628;border-radius:6px;border-left:3px solid #ff9800">
-        <div style="font-weight:700;color:#ff9800;margin-bottom:8px;font-size:13px">🇺🇸 US Stocks — DA-1 Form (15% withholding)</div>
-        <p style="font-size:12px;color:#b0b0b0;line-height:1.7;margin:0">
-          The US withholds <strong style="color:#e0e0e0">15%</strong> on dividends paid to Swiss residents (reduced from 30% under the US-Switzerland tax treaty).
-          You can offset this 15% against your Swiss income tax via the <strong style="color:#64b5f6">DA-1 form</strong> (Antrag auf Pauschalabzug).<br><br>
-          <strong style="color:#4caf50">Action:</strong> Complete DA-1 (attached to your Steuererklärung). List each US stock separately with the gross dividend and tax withheld. The 15% is credited against your Swiss cantonal + federal tax.<br><br>
-          <strong style="color:#ff9800">Worth filing if:</strong> Your total US dividends exceed approx. CHF 200/year. Below that, the paperwork outweighs the refund.<br><br>
-          <span id="t9ustax" style="color:#ff9800;font-weight:600"></span>
+      <div style="padding:16px;background:var(--warn-bg);border-radius:6px;border-left:3px solid var(--warn)">
+        <div style="font-weight:700;color:var(--warn);margin-bottom:8px;font-size:13px">🇺🇸 US Stocks — DA-1 Form (15% withholding)</div>
+        <p style="font-size:12px;color:var(--text-2);line-height:1.7;margin:0">
+          The US withholds <strong style="color:var(--text)">15%</strong> on dividends paid to Swiss residents (reduced from 30% under the US-Switzerland tax treaty).
+          You can offset this 15% against your Swiss income tax via the <strong style="color:var(--info)">DA-1 form</strong> (Antrag auf Pauschalabzug).<br><br>
+          <strong style="color:var(--pos)">Action:</strong> Complete DA-1 (attached to your Steuererklärung). List each US stock separately with the gross dividend and tax withheld. The 15% is credited against your Swiss cantonal + federal tax.<br><br>
+          <strong style="color:var(--warn)">Worth filing if:</strong> Your total US dividends exceed approx. CHF 200/year. Below that, the paperwork outweighs the refund.<br><br>
+          <span id="t9ustax" style="color:var(--warn);font-weight:600"></span>
         </p>
       </div>
     </div>
@@ -564,15 +602,15 @@
   <!-- STEP BY STEP -->
   <div class="ir-section">
     <div class="ir-title">📋 STEP-BY-STEP: WHAT TO DO EACH YEAR</div>
-    <div style="padding:16px;background:#0a1628;border-radius:6px">
-      <ol style="font-size:12px;color:#b0b0b0;line-height:2;margin:0;padding-left:20px">
-        <li><strong style="color:#e0e0e0">Download DEGIRO Jahresabschluss</strong> — Log in to DEGIRO → Inbox → Annual Report for the tax year. This lists every security, units held, value on 31 Dec, and all dividends.</li>
-        <li><strong style="color:#e0e0e0">Open your Steuererklärung</strong> — Kanton Zürich uses the online tool <strong style="color:#64b5f6">ZHprivateTax</strong> (free, at steueramt.zh.ch).</li>
-        <li><strong style="color:#e0e0e0">Fill Formular 3 (Wertschriftenverzeichnis)</strong> — One row per security: ISIN, name, units, value on 31.12, gross dividend received. The tool auto-calculates wealth tax.</li>
-        <li><strong style="color:#e0e0e0">Reclaim Verrechnungssteuer (Novartis)</strong> — In Formular 3, tick "Rückerstattung Verrechnungssteuer" next to Novartis. Enter gross dividend. Refund comes later.</li>
-        <li><strong style="color:#e0e0e0">File DA-1 for US dividends</strong> — If you received US dividends ≥ CHF 200 gross total: attach DA-1 form listing Apple, Microsoft, J&amp;J, Nvidia, Alphabet, Oracle, Eli Lilly with gross dividend and 15% tax per stock.</li>
-        <li><strong style="color:#e0e0e0">Check your Vorauszahlung</strong> — Your advance tax payment was an estimate. Once the Steuererklärung is assessed (months later), you either get a refund or pay the difference. Update the Vorauszahlung amount for next year if your income/wealth changed significantly.</li>
-        <li><strong style="color:#e0e0e0">Deadline</strong> — Zurich standard deadline is <strong style="color:#e94560">31 March</strong> (can request extension to 30 November online, free of charge).</li>
+    <div style="padding:16px;background:var(--bg-inset);border-radius:6px">
+      <ol style="font-size:12px;color:var(--text-2);line-height:2;margin:0;padding-left:20px">
+        <li><strong style="color:var(--text)">Download DEGIRO Jahresabschluss</strong> — Log in to DEGIRO → Inbox → Annual Report for the tax year. This lists every security, units held, value on 31 Dec, and all dividends.</li>
+        <li><strong style="color:var(--text)">Open your Steuererklärung</strong> — Kanton Zürich uses the online tool <strong style="color:var(--info)">ZHprivateTax</strong> (free, at steueramt.zh.ch).</li>
+        <li><strong style="color:var(--text)">Fill Formular 3 (Wertschriftenverzeichnis)</strong> — One row per security: ISIN, name, units, value on 31.12, gross dividend received. The tool auto-calculates wealth tax.</li>
+        <li><strong style="color:var(--text)">Reclaim Verrechnungssteuer (Novartis)</strong> — In Formular 3, tick "Rückerstattung Verrechnungssteuer" next to Novartis. Enter gross dividend. Refund comes later.</li>
+        <li><strong style="color:var(--text)">File DA-1 for US dividends</strong> — If you received US dividends ≥ CHF 200 gross total: attach DA-1 form listing Apple, Microsoft, J&amp;J, Nvidia, Alphabet, Oracle, Eli Lilly with gross dividend and 15% tax per stock.</li>
+        <li><strong style="color:var(--text)">Check your Vorauszahlung</strong> — Your advance tax payment was an estimate. Once the Steuererklärung is assessed (months later), you either get a refund or pay the difference. Update the Vorauszahlung amount for next year if your income/wealth changed significantly.</li>
+        <li><strong style="color:var(--text)">Deadline</strong> — Zurich standard deadline is <strong style="color:var(--neg)">31 March</strong> (can request extension to 30 November online, free of charge).</li>
       </ol>
     </div>
   </div>
@@ -583,7 +621,7 @@
     <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead>
-          <tr style="background:#0f3460;color:#90caf9">
+          <tr style="background:var(--bg-hdr);color:var(--text-hdr)">
             <th style="padding:8px 12px;text-align:left">Stock</th>
             <th style="padding:8px 12px;text-align:center">Country</th>
             <th style="padding:8px 12px;text-align:center">Tax Withheld</th>
@@ -592,25 +630,25 @@
           </tr>
         </thead>
         <tbody>
-          <tr style="border-bottom:1px solid #1e2a45"><td style="padding:8px 12px;color:#e0e0e0">Apple</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:#ff9800">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross dividend · DA-1 to offset 15%</td></tr>
-          <tr style="border-bottom:1px solid #1e2a45;background:#0a1628"><td style="padding:8px 12px;color:#e0e0e0">Microsoft</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:#ff9800">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross dividend · DA-1 to offset 15%</td></tr>
-          <tr style="border-bottom:1px solid #1e2a45"><td style="padding:8px 12px;color:#e0e0e0">Johnson &amp; Johnson</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:#ff9800">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross dividend · DA-1 to offset 15%</td></tr>
-          <tr style="border-bottom:1px solid #1e2a45;background:#0a1628"><td style="padding:8px 12px;color:#e0e0e0">Nvidia</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:#ff9800">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross dividend · DA-1 to offset 15%</td></tr>
-          <tr style="border-bottom:1px solid #1e2a45"><td style="padding:8px 12px;color:#e0e0e0">Alphabet (Google)</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:#ff9800">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross dividend · DA-1 to offset 15%</td></tr>
-          <tr style="border-bottom:1px solid #1e2a45;background:#0a1628"><td style="padding:8px 12px;color:#e0e0e0">Oracle</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:#ff9800">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross dividend · DA-1 to offset 15%</td></tr>
-          <tr style="border-bottom:1px solid #1e2a45"><td style="padding:8px 12px;color:#e0e0e0">Eli Lilly</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:#ff9800">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross dividend · DA-1 to offset 15%</td></tr>
-          <tr style="border-bottom:1px solid #1e2a45;background:#0a1628"><td style="padding:8px 12px;color:#e0e0e0">HDFC Bank (ADR)</td><td style="padding:8px 12px;text-align:center">🇮🇳 India</td><td style="padding:8px 12px;text-align:center;color:#ff9800">20%</td><td style="padding:8px 12px;text-align:center">20% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross dividend · DA-1 for partial offset (check treaty)</td></tr>
-          <tr style="border-bottom:1px solid #1e2a45"><td style="padding:8px 12px;color:#e0e0e0">Novartis</td><td style="padding:8px 12px;text-align:center">🇨🇭 Switzerland</td><td style="padding:8px 12px;text-align:center;color:#4caf50">35%</td><td style="padding:8px 12px;text-align:center">35% on gross</td><td style="padding:8px 12px;color:#b0b0b0">Declare gross · tick Verrechnungssteuer box → get 35% refunded ✓</td></tr>
-          <tr style="background:#0a1628"><td style="padding:8px 12px;color:#b0b0b0">ETFs (IE/LU domiciled)</td><td style="padding:8px 12px;text-align:center">🇮🇪🇱🇺</td><td style="padding:8px 12px;text-align:center;color:#64b5f6">varies</td><td style="padding:8px 12px;text-align:center">0–15%</td><td style="padding:8px 12px;color:#b0b0b0">ETFs typically reinvest — no dividend declared. If distributing, declare gross.</td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px;color:var(--text)">Apple</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:var(--warn)">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:var(--text-2)">Declare gross dividend · DA-1 to offset 15%</td></tr>
+          <tr style="border-bottom:1px solid var(--border);background:var(--bg-row-alt)"><td style="padding:8px 12px;color:var(--text)">Microsoft</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:var(--warn)">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:var(--text-2)">Declare gross dividend · DA-1 to offset 15%</td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px;color:var(--text)">Johnson &amp; Johnson</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:var(--warn)">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:var(--text-2)">Declare gross dividend · DA-1 to offset 15%</td></tr>
+          <tr style="border-bottom:1px solid var(--border);background:var(--bg-row-alt)"><td style="padding:8px 12px;color:var(--text)">Nvidia</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:var(--warn)">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:var(--text-2)">Declare gross dividend · DA-1 to offset 15%</td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px;color:var(--text)">Alphabet (Google)</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:var(--warn)">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:var(--text-2)">Declare gross dividend · DA-1 to offset 15%</td></tr>
+          <tr style="border-bottom:1px solid var(--border);background:var(--bg-row-alt)"><td style="padding:8px 12px;color:var(--text)">Oracle</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:var(--warn)">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:var(--text-2)">Declare gross dividend · DA-1 to offset 15%</td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px;color:var(--text)">Eli Lilly</td><td style="padding:8px 12px;text-align:center">🇺🇸 USA</td><td style="padding:8px 12px;text-align:center;color:var(--warn)">15%</td><td style="padding:8px 12px;text-align:center">15% on gross</td><td style="padding:8px 12px;color:var(--text-2)">Declare gross dividend · DA-1 to offset 15%</td></tr>
+          <tr style="border-bottom:1px solid var(--border);background:var(--bg-row-alt)"><td style="padding:8px 12px;color:var(--text)">HDFC Bank (ADR)</td><td style="padding:8px 12px;text-align:center">🇮🇳 India</td><td style="padding:8px 12px;text-align:center;color:var(--warn)">20%</td><td style="padding:8px 12px;text-align:center">20% on gross</td><td style="padding:8px 12px;color:var(--text-2)">Declare gross dividend · DA-1 for partial offset (check treaty)</td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px;color:var(--text)">Novartis</td><td style="padding:8px 12px;text-align:center">🇨🇭 Switzerland</td><td style="padding:8px 12px;text-align:center;color:var(--pos)">35%</td><td style="padding:8px 12px;text-align:center">35% on gross</td><td style="padding:8px 12px;color:var(--text-2)">Declare gross · tick Verrechnungssteuer box → get 35% refunded ✓</td></tr>
+          <tr style="background:var(--bg-row-alt)"><td style="padding:8px 12px;color:var(--text-2)">ETFs (IE/LU domiciled)</td><td style="padding:8px 12px;text-align:center">🇮🇪🇱🇺</td><td style="padding:8px 12px;text-align:center;color:var(--info)">varies</td><td style="padding:8px 12px;text-align:center">0–15%</td><td style="padding:8px 12px;color:var(--text-2)">ETFs typically reinvest — no dividend declared. If distributing, declare gross.</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <div style="margin-top:24px;padding:16px;background:#111827;border-radius:6px;border-left:3px solid #e94560;font-size:12px;color:#666;line-height:1.7">
-    <strong style="color:#888">Disclaimer:</strong> This is a general guide based on standard Swiss tax rules for private investors in Zurich as of 2025/2026.
+  <div style="margin-top:24px;padding:16px;background:var(--neg-bg);border-radius:6px;border-left:3px solid var(--neg);font-size:12px;color:var(--text-2);line-height:1.7">
+    <strong style="color:var(--text)">Disclaimer:</strong> This is a general guide based on standard Swiss tax rules for private investors in Zurich as of 2025/2026.
     Tax laws change and individual circumstances vary. For your official Steuererklärung, always verify with the
-    <a href="https://www.steueramt.zh.ch" target="_blank" style="color:#64b5f6">Zurich Cantonal Tax Office (steueramt.zh.ch)</a>
+    <a href="https://www.steueramt.zh.ch" target="_blank" style="color:var(--info)">Zurich Cantonal Tax Office (steueramt.zh.ch)</a>
     or a licensed Swiss tax advisor (Treuhänder). This dashboard does not constitute tax advice.
   </div>
 
@@ -629,7 +667,7 @@
   <p class="sub">Company overview, key ratios and price history for any holding</p>
 
   <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap">
-    <select id="t7sel" style="padding:8px 12px;border-radius:4px;border:1px solid #0f3460;background:#16213e;color:#e0e0e0;font-size:13px;min-width:240px">
+    <select id="t7sel" style="padding:8px 12px;border-radius:4px;border:1px solid var(--border);background:var(--bg-input);color:var(--text);font-size:13px;min-width:240px">
       <option value="">— select an asset —</option>
     </select>
     <div id="t7periods" style="display:flex;gap:6px">
@@ -639,11 +677,11 @@
       <button class="t7pb" data-p="1y">1Y</button>
       <button class="t7pb" data-p="5y">5Y</button>
     </div>
-    <span id="t7status" style="font-size:12px;color:#888"></span>
+    <span id="t7status" style="font-size:12px;color:var(--text-2)"></span>
   </div>
 
   <div id="t7content">
-    <div style="padding:40px;text-align:center;color:#333;font-size:14px">Select an asset above to load company info</div>
+    <div style="padding:40px;text-align:center;color:var(--text-2);font-size:14px">Select an asset above to load company info</div>
   </div>
 </div>
 
@@ -683,7 +721,7 @@
       </select>
     </div>
     <button class="btn" id="clrBtn">Clear Filters</button>
-    <button class="btn" id="reloadBtn" style="background:#0f3460" title="Re-read Account.csv from disk">&#8635; Reload Data</button>
+    <button class="btn" id="reloadBtn" style="background:var(--bg-inset);color:var(--text);border:1px solid var(--border)" title="Re-read Account.csv from disk">&#8635; Reload Data</button>
     <span class="info" id="rc"></span>
   </div>
 
@@ -730,8 +768,8 @@
   <p class="sub">Total units held and CHF invested per asset — with live prices</p>
   <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
     <button class="btn" onclick="buildPortfolio()">&#8635; Refresh Prices</button>
-    <input type="text" id="p3gs" placeholder="Search asset…" style="padding:6px 10px;border-radius:4px;border:1px solid #0f3460;background:#16213e;color:#e0e0e0;width:200px">
-    <span id="p3status" style="font-size:12px;color:#888"></span>
+    <input type="text" id="p3gs" placeholder="Search asset…" style="padding:6px 10px;border-radius:4px;border:1px solid var(--border);background:var(--bg-input);color:var(--text);width:200px">
+    <span id="p3status" style="font-size:12px;color:var(--text-2)"></span>
   </div>
   <p class="chf-note">* All values are in CHF</p>
   <div class="table-wrap">
@@ -1015,24 +1053,24 @@ function buildT1Summary() {
   const pnl = portfolioVal ? portfolioVal - invested : null;
 
   function card(label, value, color, hint) {
-    return `<div style="background:#16213e;border:1px solid #0f3460;border-radius:8px;padding:14px 18px;min-width:170px;flex:1">
-      <div style="font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">${label}</div>
-      <div style="font-size:18px;font-weight:700;color:${color||'#e0e0e0'}">CHF ${fmtN(value)}</div>
-      ${hint ? `<div style="font-size:10px;color:#555;margin-top:3px">${hint}</div>` : ''}
+    return `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;min-width:170px;flex:1">
+      <div style="font-size:11px;color:var(--text-2);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">${label}</div>
+      <div style="font-size:18px;font-weight:700;color:${color||'var(--text)'}">CHF ${fmtN(value)}</div>
+      ${hint ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px">${hint}</div>` : ''}
     </div>`;
   }
 
   el.innerHTML = `
     <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:6px">
-      ${card('Transferred In', deposited, '#64b5f6', 'deposits from bank')}
-      ${card('Transferred Out', withdrawn, withdrawn>0?'#e94560':'#888', 'withdrawn to bank')}
-      ${card('Total Invested', invested, '#e0e0e0', 'stocks + ETFs in CHF')}
-      ${card('Fees Paid', fees, '#e94560', 'DEGIRO transaction fees')}
-      ${card('Tax Paid', taxChf, '#e94560', 'withholding tax on dividends')}
-      ${card('Dividends Received', divChf, '#4caf50', 'net after tax, approx CHF')}
-      ${interest > 0 ? card('Interest Income', interest, '#4caf50', 'Flatex interest') : ''}
-      ${portfolioVal > 0 ? card('Current Portfolio Value', portfolioVal, '#4caf50', 'live prices — open Portfolio tab first') : ''}
-      ${pnl != null ? card('Total P&L', pnl, pnl>=0?'#4caf50':'#e94560', (pnl>=0?'+':'')+((pnl/invested)*100).toFixed(1)+'% on invested') : ''}
+      ${card('Transferred In', deposited, 'var(--info)', 'deposits from bank')}
+      ${card('Transferred Out', withdrawn, withdrawn>0?'var(--neg)':'var(--text-2)', 'withdrawn to bank')}
+      ${card('Total Invested', invested, 'var(--text)', 'stocks + ETFs in CHF')}
+      ${card('Fees Paid', fees, 'var(--neg)', 'DEGIRO transaction fees')}
+      ${card('Tax Paid', taxChf, 'var(--neg)', 'withholding tax on dividends')}
+      ${card('Dividends Received', divChf, 'var(--pos)', 'net after tax, approx CHF')}
+      ${interest > 0 ? card('Interest Income', interest, 'var(--pos)', 'Flatex interest') : ''}
+      ${portfolioVal > 0 ? card('Current Portfolio Value', portfolioVal, 'var(--pos)', 'live prices — open Portfolio tab first') : ''}
+      ${pnl != null ? card('Total P&L', pnl, pnl>=0?'var(--pos)':'var(--neg)', (pnl>=0?'+':'')+((pnl/invested)*100).toFixed(1)+'% on invested') : ''}
     </div>`;
   el.style.display = 'block';
 }
@@ -1119,19 +1157,19 @@ function buildT9Summary() {
   const portfolioVal = p3Rows.reduce((s,r) => s + (r.currentVal||0), 0);
 
   function card(icon, label, val, color, sub) {
-    return `<div style="background:#16213e;border:1px solid #0f3460;border-radius:8px;padding:14px 18px">
-      <div style="font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">${icon} ${label}</div>
+    return `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 18px">
+      <div style="font-size:11px;color:var(--text-2);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">${icon} ${label}</div>
       <div style="font-size:18px;font-weight:700;color:${color}">${val}</div>
-      ${sub ? `<div style="font-size:10px;color:#555;margin-top:3px">${sub}</div>` : ''}
+      ${sub ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px">${sub}</div>` : ''}
     </div>`;
   }
 
   el.innerHTML =
-    card('📥','Gross Dividends to Declare', 'CHF '+fmtN(totalDivGross+totalTax), '#64b5f6', 'net received + tax withheld = gross') +
-    card('💸','Tax Withheld (total)', 'CHF '+fmtN(totalTax), '#e94560', 'amount already deducted by DEGIRO') +
-    card('🇨🇭','Novartis Verrechnungssteuer', 'CHF '+fmtN(novTaxChf), '#4caf50', 'declare gross → get 35% refunded') +
-    card('🇺🇸','US Withholding (DA-1)', 'CHF '+fmtN(usTaxChf), '#ff9800', 'file DA-1 to offset against Swiss tax') +
-    (portfolioVal > 0 ? card('🏛️','Portfolio Value (31 Dec estimate)', 'CHF '+fmtN(portfolioVal), '#e0e0e0', 'declare as wealth (Vermögen)') : '');
+    card('📥','Gross Dividends to Declare', 'CHF '+fmtN(totalDivGross+totalTax), 'var(--info)', 'net received + tax withheld = gross') +
+    card('💸','Tax Withheld (total)', 'CHF '+fmtN(totalTax), 'var(--neg)', 'amount already deducted by DEGIRO') +
+    card('🇨🇭','Novartis Verrechnungssteuer', 'CHF '+fmtN(novTaxChf), 'var(--pos)', 'declare gross → get 35% refunded') +
+    card('🇺🇸','US Withholding (DA-1)', 'CHF '+fmtN(usTaxChf), 'var(--warn)', 'file DA-1 to offset against Swiss tax') +
+    (portfolioVal > 0 ? card('🏛️','Portfolio Value (31 Dec estimate)', 'CHF '+fmtN(portfolioVal), 'var(--text)', 'declare as wealth (Vermögen)') : '');
 }
 
 function buildT10() {
@@ -1226,16 +1264,16 @@ function buildT10() {
   function statusBadge(yr) {
     if (yr < thisYear) {
       const deadline = `31 Mar ${+yr+1}`;
-      return `<span style="background:#1a4a2e;color:#4caf50;border:1px solid #4caf50;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700">CLOSED YEAR — should be filed by ${deadline}</span>`;
+      return `<span style="background:var(--pos-bg);color:var(--pos);border:1px solid var(--pos);border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700">CLOSED YEAR — should be filed by ${deadline}</span>`;
     }
-    return `<span style="background:#1a2a4a;color:#ff9800;border:1px solid #ff9800;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700">IN PROGRESS — recalculate after 31 Dec ${yr}</span>`;
+    return `<span style="background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn);border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700">IN PROGRESS — recalculate after 31 Dec ${yr}</span>`;
   }
 
   function kpi(label, val, color, note) {
-    return `<div style="background:#0a1628;border-radius:6px;padding:12px 16px;min-width:160px;flex:1">
-      <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">${label}</div>
-      <div style="font-size:16px;font-weight:700;color:${color||'#e0e0e0'}">CHF ${fmtN(val)}</div>
-      ${note ? `<div style="font-size:10px;color:#555;margin-top:2px">${note}</div>` : ''}
+    return `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:12px 16px;min-width:160px;flex:1">
+      <div style="font-size:10px;color:var(--text-2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">${label}</div>
+      <div style="font-size:16px;font-weight:700;color:${color||'var(--text)'}">CHF ${fmtN(val)}</div>
+      ${note ? `<div style="font-size:10px;color:var(--text-muted);margin-top:2px">${note}</div>` : ''}
     </div>`;
   }
 
@@ -1256,64 +1294,64 @@ function buildT10() {
         const gross = v.net;
         const isNov = stock.toLowerCase().includes('novartis');
         const action = isNov
-          ? '<span style="color:#4caf50">Tick Verrechnungssteuer box → 35% refunded</span>'
-          : v.tax > 0 ? '<span style="color:#ff9800">Declare gross → DA-1 for 15% credit</span>'
-                      : '<span style="color:#888">Declare gross dividend</span>';
+          ? '<span style="color:var(--pos)">Tick Verrechnungssteuer box → 35% refunded</span>'
+          : v.tax > 0 ? '<span style="color:var(--warn)">Declare gross → DA-1 for 15% credit</span>'
+                      : '<span style="color:var(--text-2)">Declare gross dividend</span>';
         const netReceived = v.net - v.tax;         // CHF actually landed (net USD / rate)
         // origNet = the Dividend row amount (1.82 USD) — the gross you received before tax deducted
         const origDisp = v.origNet > 0
-          ? `<span style="font-weight:600">${v.origNet.toFixed(2)}</span> <span style="color:#64b5f6;font-size:10px">${v.ccy}</span>`
+          ? `<span style="font-weight:600">${v.origNet.toFixed(2)}</span> <span style="color:var(--info);font-size:10px">${v.ccy}</span>`
           : '—';
-        return `<tr style="border-bottom:1px solid #0f1e35">
-          <td style="padding:6px 10px;color:#e0e0e0">${stock}</td>
-          <td style="padding:6px 10px;text-align:right;color:#e0e0e0">${origDisp}</td>
-          <td style="padding:6px 10px;text-align:right;color:#4caf50">CHF ${fmtN(gross)}</td>
-          <td style="padding:6px 10px;text-align:right;color:#e94560">${v.tax>0 ? 'CHF '+fmtN(v.tax) : '—'}</td>
-          <td style="padding:6px 10px;text-align:right;color:#b0b0b0">CHF ${fmtN(netReceived)}</td>
+        return `<tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:6px 10px;color:var(--text)">${stock}</td>
+          <td style="padding:6px 10px;text-align:right;color:var(--text)">${origDisp}</td>
+          <td style="padding:6px 10px;text-align:right;color:var(--pos)">CHF ${fmtN(gross)}</td>
+          <td style="padding:6px 10px;text-align:right;color:var(--neg)">${v.tax>0 ? 'CHF '+fmtN(v.tax) : '—'}</td>
+          <td style="padding:6px 10px;text-align:right;color:var(--text-2)">CHF ${fmtN(netReceived)}</td>
           <td style="padding:6px 10px;font-size:11px">${action}</td>
         </tr>`;
       }).join('');
 
     const portfolioNote = isCurrent
-      ? `<div style="padding:12px 16px;background:#0a1628;border-radius:6px;border-left:3px solid #ff9800;font-size:12px;color:#b0b0b0">
-          <strong style="color:#ff9800">Portfolio value as of today:</strong> CHF ${fmtN(currentPortfolioVal)} (live prices).
-          For the Steuererklärung you need the value on <strong style="color:#e0e0e0">31 December ${yr}</strong>.
+      ? `<div style="padding:12px 16px;background:var(--warn-bg);border-radius:6px;border-left:3px solid var(--warn);font-size:12px;color:#b0b0b0">
+          <strong style="color:var(--warn)">Portfolio value as of today:</strong> CHF ${fmtN(currentPortfolioVal)} (live prices).
+          For the Steuererklärung you need the value on <strong style="color:var(--text)">31 December ${yr}</strong>.
           Come back after 31 Dec ${yr} and reload — this will update with the final figure from your CSV.<br>
-          Alternatively download the <strong style="color:#64b5f6">DEGIRO Jahresabschluss ${yr}</strong> (available in Jan ${+yr+1} in your DEGIRO inbox).
+          Alternatively download the <strong style="color:var(--info)">DEGIRO Jahresabschluss ${yr}</strong> (available in Jan ${+yr+1} in your DEGIRO inbox).
         </div>`
-      : `<div style="padding:12px 16px;background:#0a1628;border-radius:6px;border-left:3px solid #64b5f6;font-size:12px;color:#b0b0b0">
-          <strong style="color:#64b5f6">Portfolio value on 31 Dec ${yr}:</strong>
-          Download <strong style="color:#e0e0e0">DEGIRO Jahresabschluss ${yr}</strong> from your DEGIRO inbox (Postbox → Annual Report ${yr}).
+      : `<div style="padding:12px 16px;background:var(--info-bg);border-radius:6px;border-left:3px solid var(--info);font-size:12px;color:var(--text-2)">
+          <strong style="color:var(--info)">Portfolio value on 31 Dec ${yr}:</strong>
+          Download <strong style="color:var(--text)">DEGIRO Jahresabschluss ${yr}</strong> from your DEGIRO inbox (Postbox → Annual Report ${yr}).
           Enter that value in Formular 3 (Wertschriftenverzeichnis) column "Kurswert am 31.12."
         </div>`;
 
     html += `
-    <div style="background:#16213e;border:1px solid #0f3460;border-radius:10px;padding:20px 24px;margin-bottom:24px">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:24px">
 
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-        <div style="font-size:22px;font-weight:800;color:#e0e0e0">Tax Year ${yr}</div>
+        <div style="font-size:22px;font-weight:800;color:var(--text)">Tax Year ${yr}</div>
         ${statusBadge(yr)}
-        ${yr === '2024' ? '<span style="background:#16213e;color:#888;border:1px solid #333;border-radius:4px;padding:2px 8px;font-size:11px">First year · started 13 Nov 2024</span>' : ''}
+        ${yr === '2024' ? '<span style="background:var(--bg-inset);color:var(--text-2);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:11px">First year · started 13 Nov 2024</span>' : ''}
       </div>
 
       <!-- KPI row -->
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
-        ${kpi('Transferred In', y.deposited, '#64b5f6', 'NOT taxable — own money')}
-        ${kpi('Total Invested', y.invested, '#e0e0e0', 'stocks + ETFs purchased')}
-        ${grossDiv > 0 ? kpi('Gross Dividends to Declare', grossDiv, '#4caf50', 'enter in Formular 3') : ''}
-        ${y.taxChf > 0 ? kpi('Tax Withheld', y.taxChf, '#e94560', 'already deducted') : ''}
-        ${y.novTaxChf > 0 ? kpi('🇨🇭 Verrechnungssteuer to Reclaim', y.novTaxChf, '#4caf50', 'tick box → refunded') : ''}
-        ${y.usTaxChf > 0 ? kpi('🇺🇸 DA-1 Credit (US 15%)', y.usTaxChf, '#ff9800', 'file DA-1 form') : ''}
+        ${kpi('Transferred In', y.deposited, 'var(--info)', 'NOT taxable — own money')}
+        ${kpi('Total Invested', y.invested, 'var(--text)', 'stocks + ETFs purchased')}
+        ${grossDiv > 0 ? kpi('Gross Dividends to Declare', grossDiv, 'var(--pos)', 'enter in Formular 3') : ''}
+        ${y.taxChf > 0 ? kpi('Tax Withheld', y.taxChf, 'var(--neg)', 'already deducted') : ''}
+        ${y.novTaxChf > 0 ? kpi('🇨🇭 Verrechnungssteuer to Reclaim', y.novTaxChf, 'var(--pos)', 'tick box → refunded') : ''}
+        ${y.usTaxChf > 0 ? kpi('🇺🇸 DA-1 Credit (US 15%)', y.usTaxChf, 'var(--warn)', 'file DA-1 form') : ''}
       </div>
 
       <!-- Dividend table -->
       ${stockRows ? `
       <div style="margin-bottom:14px">
-        <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Dividends received in ${yr}</div>
+        <div style="font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Dividends received in ${yr}</div>
         <div style="overflow-x:auto">
           <table style="width:100%;border-collapse:collapse;font-size:12px">
             <thead>
-              <tr style="background:#0f3460;color:#90caf9">
+              <tr style="background:var(--bg-hdr);color:var(--text-hdr)">
                 <th style="padding:6px 10px;text-align:left">Stock</th>
                 <th style="padding:6px 10px;text-align:right">Gross Dividend</th>
                 <th style="padding:6px 10px;text-align:right">Gross CHF (declare this)</th>
@@ -1325,15 +1363,15 @@ function buildT10() {
             <tbody>${stockRows}</tbody>
           </table>
         </div>
-      </div>` : `<div style="padding:10px 14px;background:#0a1628;border-radius:6px;color:#666;font-size:12px">No dividends received in ${yr}.</div>`}
+      </div>` : `<div style="padding:10px 14px;background:var(--bg-inset);border-radius:6px;color:var(--text-2);font-size:12px">No dividends received in ${yr}.</div>`}
 
       <!-- Portfolio value note -->
       <div style="margin-top:12px">${portfolioNote}</div>
 
       <!-- Checklist -->
-      <div style="margin-top:14px;padding:12px 16px;background:#0a1628;border-radius:6px">
-        <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Checklist for ${yr}</div>
-        <div style="font-size:12px;color:#b0b0b0;line-height:2">
+      <div style="margin-top:14px;padding:12px 16px;background:var(--bg-inset);border-radius:6px">
+        <div style="font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Checklist for ${yr}</div>
+        <div style="font-size:12px;color:var(--text-2);line-height:2">
           ${isCurrent
             ? '⏳ Year not yet complete — come back after 31 Dec '+yr+' to finalise<br>📅 Deadline: 31 March '+(+yr+1)+' (extendable to 30 Nov '+(+yr+1)+' — request online at steueramt.zh.ch)'
             : `${grossDiv > 0 ? '☐ Enter gross dividends CHF '+fmtN(grossDiv)+' in Formular 3 (Wertschriftenverzeichnis)<br>' : ''}
@@ -1371,7 +1409,7 @@ function buildTable() {
         </tr>
       </thead>
       <tbody id="tb"></tbody>
-      <tfoot id="t1foot" style="position:sticky;bottom:0;z-index:2;background:#0f3460;font-weight:600;border-top:2px solid #1a4a80"></tfoot>
+      <tfoot id="t1foot" style="position:sticky;bottom:0;z-index:2;background:var(--bg-hdr);font-weight:600;color:var(--text-hdr);border-top:2px solid #333"></tfoot>
     </table>`;
 
   // Sort headers — click on label only so filter input doesn't trigger sort
@@ -1673,7 +1711,7 @@ function renderP2Table() {
   const s7 = document.getElementById('p2sub7'); if (s7) s7.textContent = totalFees ? fmtN(totalFees) : '';
   const s8 = document.getElementById('p2sub8'); if (s8) s8.textContent = 'CHF ' + fmtN(totalInvested);
   const foot = document.getElementById('p2foot');
-  if (foot) foot.innerHTML = `<tr style="background:#0f3460;font-weight:600;border-top:2px solid #1a4a80">
+  if (foot) foot.innerHTML = `<tr style="background:var(--bg-hdr);font-weight:600;border-top:2px solid #1a4a80">
     <td colspan="9" style="padding:6px 10px;color:#aaa;font-size:11px">TOTAL — ${p2Filtered.length} purchases</td>
   </tr>`;
 
@@ -1839,7 +1877,7 @@ function renderP3Table() {
   const s7 = document.getElementById('p3sub7'); if (s7) s7.textContent = hasAnyVal ? 'CHF ' + fmtN(totVal) : '';
   const s8 = document.getElementById('p3sub8'); if (s8) s8.style.color = gainColor, s8.textContent = hasAnyVal ? (totGain>=0?'+':'')+'CHF '+fmtN(totGain) : '';
   const foot3 = document.getElementById('p3foot');
-  if (foot3) foot3.innerHTML = `<tr style="background:#0f3460;font-weight:600;border-top:2px solid #1a4a80">
+  if (foot3) foot3.innerHTML = `<tr style="background:var(--bg-hdr);font-weight:600;border-top:2px solid #1a4a80">
     <td colspan="10" style="padding:6px 10px;color:#aaa;font-size:11px">TOTAL — ${p3Filtered.length} assets</td>
   </tr>`;
   renderPortfolioChart();
@@ -2054,7 +2092,7 @@ function renderP4Table() {
   const p4s4 = document.getElementById('p4sub4'); if (p4s4) p4s4.textContent = totTax ? 'CHF ' + fmtN(totTax) : '';
   const p4s5 = document.getElementById('p4sub5'); if (p4s5) p4s5.textContent = 'CHF ' + fmtN(totNet);
   const foot4 = document.getElementById('p4foot');
-  if (foot4) foot4.innerHTML = `<tr style="background:#0f3460;font-weight:600;border-top:2px solid #1a4a80">
+  if (foot4) foot4.innerHTML = `<tr style="background:var(--bg-hdr);font-weight:600;border-top:2px solid #1a4a80">
     <td colspan="6" style="padding:6px 10px;color:#aaa;font-size:11px">TOTAL — ${p4Filtered.length} dividend events</td>
   </tr>`;
 
@@ -2111,7 +2149,7 @@ function renderDivSummary() {
   const total = rows.reduce((s, r) => s + r.total, 0);
   const p5s2 = document.getElementById('p5sub2'); if (p5s2) p5s2.textContent = 'CHF ' + fmtN(total);
   const foot5 = document.getElementById('p5foot');
-  if (foot5) foot5.innerHTML = `<tr style="background:#0f3460;font-weight:600;border-top:2px solid #1a4a80">
+  if (foot5) foot5.innerHTML = `<tr style="background:var(--bg-hdr);font-weight:600;border-top:2px solid #1a4a80">
     <td colspan="3" style="padding:6px 10px;color:#aaa;font-size:11px">TOTAL — ${rows.length} assets</td>
   </tr>`;
 
@@ -2480,7 +2518,7 @@ function p3HistMove(evt, svg, pts) {
   const rows = [
     {id:'hT0', text: date,                              color:'#aaa'},
     {id:'hT1', text: `Portfolio  CHF ${fmtN(+pv)}`,    color:'#29b6f6'},
-    {id:'hT2', text: `Invested   CHF ${fmtN(+iv)}`,    color:'#ff9800'},
+    {id:'hT2', text: `Invested   CHF ${fmtN(+iv)}`,    color:'var(--warn)'},
     {id:'hT3', text: `Gain  ${gs}CHF ${fmtN(Math.abs(gain))}  (${gs}${gp}%)`, color: gc},
   ];
   rows.forEach(({id, text, color}, i) => {
@@ -2710,7 +2748,7 @@ async function fetchBenchmarks() {
     }).join('');
 
     const portCard = portfolioXirr != null ? `
-      <div style="background:#0f3460;border:2px solid #e94560;border-radius:8px;padding:14px 18px;min-width:180px">
+      <div style="background:var(--bg-hdr);border:2px solid #e94560;border-radius:8px;padding:14px 18px;min-width:180px">
         <div style="color:#aaa;font-size:11px;margin-bottom:4px">Your Portfolio</div>
         <div style="font-size:22px;font-weight:700;color:${portColor}">${pct(portfolioXirr)}<span style="font-size:11px;color:#aaa;font-weight:400"> /yr</span></div>
       </div>` : '';
@@ -2805,7 +2843,7 @@ function renderReturnsTable() {
   const p6s8 = document.getElementById('p6sub8'); if (p6s8) p6s8.textContent = 'CHF ' + fmtN(totVal);
   const p6s9 = document.getElementById('p6sub9'); if (p6s9) p6s9.style.color = totColor, p6s9.textContent = (totReturn>=0?'+':'')+'CHF '+fmtN(totReturn);
   const foot6 = document.getElementById('p6foot');
-  if (foot6) foot6.innerHTML = `<tr style="background:#0f3460;font-weight:600;border-top:2px solid #1a4a80">
+  if (foot6) foot6.innerHTML = `<tr style="background:var(--bg-hdr);font-weight:600;border-top:2px solid #1a4a80">
     <td colspan="2" style="padding:6px 10px;color:#aaa;font-size:11px">TOTAL PORTFOLIO</td>
     <td style="text-align:right;padding:6px 10px">${xirrTotCell}</td>
     <td colspan="8" style="padding:6px 10px"></td>
@@ -3183,10 +3221,10 @@ function renderETFInfo(d) {
   const holdHtml = holdings.length
     ? `<table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead><tr>
-          <th style="text-align:left;padding:7px 10px;background:#0f3460;color:#e0e0e0">Symbol</th>
-          <th style="text-align:left;padding:7px 10px;background:#0f3460;color:#e0e0e0">Name</th>
-          <th style="text-align:right;padding:7px 10px;background:#0f3460;color:#e0e0e0">Weight</th>
-          <th style="padding:7px 10px;background:#0f3460"></th>
+          <th style="text-align:left;padding:7px 10px;background:var(--bg-hdr);color:var(--text-hdr)">Symbol</th>
+          <th style="text-align:left;padding:7px 10px;background:var(--bg-hdr);color:var(--text-hdr)">Name</th>
+          <th style="text-align:right;padding:7px 10px;background:var(--bg-hdr);color:var(--text-hdr)">Weight</th>
+          <th style="padding:7px 10px;background:var(--bg-hdr)"></th>
         </tr></thead>
         <tbody>${holdings.map((h,i) => `
           <tr style="border-bottom:1px solid #1e2a45;background:${i%2?'#111827':''}">
@@ -3194,7 +3232,7 @@ function renderETFInfo(d) {
             <td style="padding:6px 10px;color:#aaa">${esc(h.name)}</td>
             <td style="padding:6px 10px;text-align:right;color:#e0e0e0;font-weight:600">${h.pct.toFixed(2)}%</td>
             <td style="padding:6px 10px;width:120px">
-              <div style="height:6px;background:#0f3460;border-radius:3px">
+              <div style="height:6px;background:var(--bg-hdr);border-radius:3px">
                 <div style="height:6px;width:${Math.min(h.pct/holdings[0].pct*100,100).toFixed(0)}%;background:#29b6f6;border-radius:3px"></div>
               </div>
             </td>
@@ -3224,7 +3262,7 @@ function renderETFInfo(d) {
     ? sortedSectors.map(([k,v]) => `
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
           <div style="width:160px;font-size:11px;color:#aaa;text-align:right;flex-shrink:0">${sectorNames[k]||k}</div>
-          <div style="flex:1;height:16px;background:#0f3460;border-radius:3px;overflow:hidden">
+          <div style="flex:1;height:16px;background:var(--bg-hdr);border-radius:3px;overflow:hidden">
             <div style="height:16px;width:${(v/maxSW*100).toFixed(1)}%;background:${sectorColors[k]||'#555'};border-radius:3px;transition:width .3s"></div>
           </div>
           <div style="width:48px;font-size:12px;color:#e0e0e0;font-weight:600">${v.toFixed(1)}%</div>

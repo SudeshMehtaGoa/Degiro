@@ -304,6 +304,19 @@ FX conversion uses actual DEGIRO FX rates from the CSV (nearest date within 30 d
 
 ---
 
+## UI Theme
+
+The dashboard uses a **Claude UI-inspired light theme** — light grey page background (`#f5f5f5`), white cards, near-black (`#212121`) table headers and tab bar, amber (`#f59e0b`) active-tab indicator. Semantic colours are preserved throughout:
+
+| Colour | Used for |
+|--------|----------|
+| Green `#15803d` | Positive returns, dividends, gains |
+| Red `#dc2626` | Fees, tax withheld, negative P&L |
+| Amber `#b45309` | Warnings, DA-1 / pending items |
+| Blue `#1d4ed8` | Info, links, form references |
+
+---
+
 ## Known Limitations
 
 - Prices are delayed (Yahoo Finance free tier — typically 15 min delay)
