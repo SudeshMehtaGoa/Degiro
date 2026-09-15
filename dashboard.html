@@ -2727,39 +2727,41 @@ async function fetchBenchmarks() {
 
     const cards = Object.entries(data).map(([sym, b]) => {
       if (b.error) return `
-        <div style="background:#16213e;border:1px solid #1e2a45;border-radius:8px;padding:14px 18px;min-width:160px">
-          <div style="color:#888;font-size:11px;margin-bottom:4px">${b.name || sym}</div>
-          <div style="color:#555;font-size:13px">Unavailable</div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;min-width:160px">
+          <div style="color:var(--text-2);font-size:11px;margin-bottom:4px">${b.name || sym}</div>
+          <div style="color:var(--text-muted);font-size:13px">Unavailable</div>
         </div>`;
 
       const beating  = portfolioXirr != null && portfolioXirr > b.cagr;
       const diff     = portfolioXirr != null ? portfolioXirr - b.cagr : null;
       const bColor   = b.cagr >= 0 ? 'var(--pos)' : 'var(--neg)';
       const badge    = diff != null
-        ? `<span style="font-size:11px;padding:2px 7px;border-radius:10px;background:${beating?'var(--pos-bg)':'var(--neg-bg)'};color:${beating?'var(--pos)':'var(--neg)'};margin-left:8px">${beating ? '▲ you beat it by ' : '▼ lagging by '}${pct(Math.abs(diff))}</span>`
+        ? `<div style="margin-top:8px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;display:inline-block;background:${beating?'var(--pos-bg)':'var(--neg-bg)'};color:${beating?'var(--pos)':'var(--neg)'}">${beating ? '▲ beating by ' : '▼ lagging by '}${pct(Math.abs(diff))}</div>`
         : '';
 
       return `
-        <div style="background:#16213e;border:1px solid ${beating?'#1a4a1a':'#2a1a1a'};border-radius:8px;padding:14px 18px;min-width:180px">
-          <div style="color:#888;font-size:11px;margin-bottom:4px">${b.name} <span style="color:#444">(${b.startDate})</span></div>
-          <div style="font-size:18px;font-weight:700;color:${bColor}">${pct(b.cagr)}<span style="font-size:11px;color:#555;font-weight:400"> /yr</span></div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-left:4px solid ${beating?'var(--pos)':'var(--neg)'};border-radius:8px;padding:14px 18px;min-width:180px">
+          <div style="color:var(--text-2);font-size:11px;margin-bottom:2px;font-weight:500">${b.name}</div>
+          <div style="color:var(--text-muted);font-size:10px;margin-bottom:8px">since ${b.startDate}</div>
+          <div style="font-size:20px;font-weight:700;color:${bColor}">${pct(b.cagr)}<span style="font-size:11px;color:var(--text-muted);font-weight:400"> /yr</span></div>
           ${badge}
         </div>`;
     }).join('');
 
     const portCard = portfolioXirr != null ? `
-      <div style="background:var(--bg-hdr);border:2px solid var(--neg);border-radius:8px;padding:14px 18px;min-width:180px">
-        <div style="color:#aaa;font-size:11px;margin-bottom:4px">Your Portfolio</div>
-        <div style="font-size:22px;font-weight:700;color:${portColor}">${pct(portfolioXirr)}<span style="font-size:11px;color:#aaa;font-weight:400"> /yr</span></div>
+      <div style="background:var(--bg-hdr);border-radius:10px;padding:16px 22px;min-width:190px;box-shadow:0 2px 8px rgba(0,85,132,.25)">
+        <div style="color:rgba(255,255,255,.65);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-weight:600">Your Portfolio</div>
+        <div style="font-size:26px;font-weight:800;color:#ffffff;letter-spacing:-.5px">${pct(portfolioXirr)}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:4px">annualised return (XIRR)</div>
       </div>` : '';
 
     el.innerHTML = `
-      <div style="margin-bottom:8px;font-size:12px;color:#556">
+      <div style="margin-bottom:10px;font-size:12px;color:var(--text-muted)">
         Benchmark comparison — annualised return since your first purchase (${fromStr}), in each index's local currency
       </div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:stretch">
         ${portCard}
-        <div style="display:flex;align-items:center;color:#444;font-size:20px;padding:0 4px">vs</div>
+        <div style="display:flex;align-items:center;color:var(--text-muted);font-size:18px;padding:0 4px;font-weight:300">vs</div>
         ${cards}
       </div>`;
 
