@@ -3120,7 +3120,7 @@ function renderAssetInfo(d) {
   ];
 
   const scoreColor = { good: 'var(--pos)', caution: 'var(--warn)', danger: 'var(--neg)' };
-  const scoreBg    = { good: '#0a2010', caution: '#2a1a00', danger: '#2a0a0a' };
+  const scoreBg    = { good: 'var(--pos-bg)', caution: 'var(--warn-bg)', danger: 'var(--neg-bg)' };
 
   const scorecardHtml = `
     <div style="margin-bottom:24px">
@@ -3139,12 +3139,12 @@ function renderAssetInfo(d) {
         <tbody>
           ${scoreRows.map(r => {
             const s = r.raw != null ? r.score(r.raw) : null;
-            const col = s ? scoreColor[s] : '#444';
+            const col = s ? scoreColor[s] : 'var(--text-2)';
             const bg  = s ? scoreBg[s]   : '';
             const dispVal = r.disp ?? '—';
             return `<tr style="border-bottom:1px solid #111827">
               <td style="font-weight:600;color:var(--text)">${r.label}</td>
-              <td style="color:#888">${r.desc}</td>
+              <td style="color:var(--text-2)">${r.desc}</td>
               <td style="text-align:center;background:${bg};color:${col};font-weight:700;font-size:13px;border-radius:4px">${dispVal}</td>
               <td style="text-align:center;color:var(--pos);font-size:11px">${r.good}</td>
               <td style="text-align:center;color:#ff9800;font-size:11px">${r.caution}</td>
