@@ -1505,7 +1505,7 @@ function renderRows() {
   const sumHtml = Object.entries(ccySums)
     .sort((a,b) => a[0].localeCompare(b[0]))
     .map(([ccy, sum]) => {
-      const color = sum > 0 ? '#4caf50' : sum < 0 ? '#e94560' : '#aaa';
+      const color = sum > 0 ? 'var(--pos)' : sum < 0 ? 'var(--neg)' : 'var(--text-2)';
       return `<span style="color:${color};margin-right:10px">${ccy} ${sum>=0?'+':''}${sum.toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`;
     }).join('');
   const foot = document.getElementById('t1foot');
@@ -1725,7 +1725,7 @@ function renderP2Table() {
       <td>${esc(r.origCcy)}</td>
       <td style="text-align:right">${r.ratePerUnit != null ? fmtN(r.ratePerUnit) : '—'}</td>
       <td style="text-align:right;color:#ff9800">${r.feeChf ? fmtN(r.feeChf) : '—'}</td>
-      <td style="text-align:right;font-weight:600;color:#4caf50">${r.totalChf ? fmtN(r.totalChf) : '—'}</td>
+      <td style="text-align:right;font-weight:600;color:var(--pos)">${r.totalChf ? fmtN(r.totalChf) : '—'}</td>
     </tr>`).join('');
 
   document.getElementById('p2rc').textContent = `${p2Filtered.length} purchases`;
@@ -1836,21 +1836,21 @@ function renderP3Table() {
   document.getElementById('p3body').innerHTML = sorted.map((r, i) => {
     const loading  = r.priceStatus === 'loading';
     const errored  = r.priceStatus === 'error';
-    const divCell     = r.divReceived > 0 ? `<span style="color:#4caf50">CHF ${fmtN(r.divReceived)}</span>` : '—';
+    const divCell     = r.divReceived > 0 ? `<span style="color:var(--pos)">CHF ${fmtN(r.divReceived)}</span>` : '—';
     const priceCell   = loading  ? '<span style="color:#555">fetching…</span>'
-                      : errored  ? '<span style="color:#e94560" title="'+esc(r.priceError||'')+'">N/A</span>'
+                      : errored  ? '<span style="color:var(--neg)" title="'+esc(r.priceError||'')+'">N/A</span>'
                       : r.priceChf != null ? 'CHF ' + fmtN(r.priceChf) : '—';
     const valCell     = (r.currentVal  != null) ? 'CHF ' + fmtN(r.currentVal)  : (loading ? '…' : '—');
     const gain        = r.gainLoss;
-    const gainColor   = gain == null ? '' : gain >= 0 ? 'color:#4caf50' : 'color:#e94560';
+    const gainColor   = gain == null ? '' : gain >= 0 ? 'color:var(--pos)' : 'color:var(--neg)';
     const gainPrefix  = gain != null && gain > 0 ? '+' : '';
     const gainCell    = gain != null
       ? `<span style="${gainColor};font-weight:600">${gainPrefix}CHF ${fmtN(gain)}</span>`
       : (loading ? '…' : '—');
 
     const typeBadge = r.assetType === 'ETF'
-      ? `<span style="background:#1a4a2e;color:#4caf50;border:1px solid #4caf50;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:600">ETF</span>`
-      : `<span style="background:#0f2d4a;color:#64b5f6;border:1px solid #64b5f6;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:600">Stock</span>`;
+      ? `<span style="background:var(--pos-bg);color:var(--pos);border:1px solid var(--pos);border-radius:3px;padding:1px 5px;font-size:10px;font-weight:600">ETF</span>`
+      : `<span style="background:var(--info-bg);color:var(--info);border:1px solid var(--info);border-radius:3px;padding:1px 5px;font-size:10px;font-weight:600">Stock</span>`;
     return `<tr>
       <td style="color:#555">${i + 1}</td>
       <td>${esc(r.asset)}</td>
@@ -1871,7 +1871,7 @@ function renderP3Table() {
   const totVal      = p3Filtered.reduce((s, r) => s + (r.currentVal != null ? r.currentVal : 0), 0);
   const hasAnyVal   = p3Filtered.some(r => r.currentVal != null);
   const totGain     = totVal + totDiv - p3Filtered.reduce((s, r) => s + (r.currentVal != null ? r.totalChf : 0), 0);
-  const gainColor   = totGain >= 0 ? '#4caf50' : '#e94560';
+  const gainColor   = totGain >= 0 ? 'var(--pos)' : 'var(--neg)';
   const s3 = document.getElementById('p3sub4'); if (s3) s3.textContent = 'CHF ' + fmtN(totInvested);
   const s5 = document.getElementById('p3sub5'); if (s5) s5.textContent = totDiv > 0 ? 'CHF ' + fmtN(totDiv) : '';
   const s7 = document.getElementById('p3sub7'); if (s7) s7.textContent = hasAnyVal ? 'CHF ' + fmtN(totVal) : '';
@@ -1935,7 +1935,7 @@ async function fetchLivePrices() {
 
   } catch (e) {
     console.error('[Tab3] fetch error:', e);
-    status.style.color = '#e94560';
+    status.style.color = 'var(--neg)';
     status.textContent = 'Error: ' + e.message;
     p3Rows.forEach(r => { r.priceStatus = 'error'; r.priceError = e.message; });
   }
@@ -2100,8 +2100,8 @@ function renderP4Table() {
       <td>${esc(r.date)}</td>
       <td>${esc(r.asset)}</td>
       <td style="font-family:monospace;font-size:11px">${esc(r.isin)}</td>
-      <td style="text-align:right;color:#4caf50">${r.grossChf != null ? fmtN(r.grossChf) : '—'}</td>
-      <td style="text-align:right;color:#e94560">${r.taxChf ? fmtN(r.taxChf) : '—'}</td>
+      <td style="text-align:right;color:var(--pos)">${r.grossChf != null ? fmtN(r.grossChf) : '—'}</td>
+      <td style="text-align:right;color:var(--neg)">${r.taxChf ? fmtN(r.taxChf) : '—'}</td>
       <td style="text-align:right;font-weight:600">${r.netChf != null ? fmtN(r.netChf) : '—'}</td>
     </tr>`).join('');
 
@@ -2157,7 +2157,7 @@ function renderDivSummary() {
     <tr>
       <td style="color:#555">${i + 1}</td>
       <td>${esc(r.asset)}</td>
-      <td style="text-align:right;font-weight:600;color:#4caf50">CHF ${fmtN(r.total)}</td>
+      <td style="text-align:right;font-weight:600;color:var(--pos)">CHF ${fmtN(r.total)}</td>
     </tr>`).join('');
 
   // Wire sort headers once
@@ -2218,9 +2218,9 @@ function getTooltip() {
     t = document.createElement('div');
     t.id = '_chartTip';
     t.style.cssText = `position:fixed;pointer-events:none;display:none;
-      background:#0f3460;border:1px solid #e94560;border-radius:6px;
+      background:var(--bg-card);border:1px solid var(--border);border-radius:6px;
       padding:8px 14px;font-size:12px;font-family:Segoe UI,Arial;
-      color:#e0e0e0;z-index:999;line-height:1.7;box-shadow:0 4px 16px #0006`;
+      color:var(--text);z-index:999;line-height:1.7;box-shadow:0 2px 12px rgba(0,0,0,.15)`;
     document.body.appendChild(t);
   }
   return t;
@@ -2460,7 +2460,7 @@ function renderHistoryChart(purchases) {
   const lastPort = portSeries[n-1].val;
   const lastInv  = invSeries[n-1].val;
   const totGain  = lastPort - lastInv;
-  const gColor   = totGain >= 0 ? '#4caf50' : '#e94560';
+  const gColor   = totGain >= 0 ? 'var(--pos)' : 'var(--neg)';
 
   el.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -2508,7 +2508,7 @@ function p3HistMove(evt, svg, pts) {
   const W = svg.viewBox.baseVal.width;
   const tipX = px + 12 > W - 180 ? px - 180 : px + 12;
   const tipY = 18;
-  const gc   = gain >= 0 ? '#4caf50' : '#e94560';
+  const gc   = gain >= 0 ? 'var(--pos)' : 'var(--neg)';
   const gs   = gain >= 0 ? '+' : '';
 
   document.getElementById('hLine').setAttribute('x1', px); document.getElementById('hLine').setAttribute('x2', px); document.getElementById('hLine').removeAttribute('display');
@@ -2723,7 +2723,7 @@ async function fetchBenchmarks() {
     const data = await res.json();
 
     const pct = n => (n >= 0 ? '+' : '') + (n * 100).toFixed(2) + '%';
-    const portColor = portfolioXirr >= 0 ? '#4caf50' : '#e94560';
+    const portColor = portfolioXirr >= 0 ? 'var(--pos)' : 'var(--neg)';
 
     const cards = Object.entries(data).map(([sym, b]) => {
       if (b.error) return `
@@ -2734,9 +2734,9 @@ async function fetchBenchmarks() {
 
       const beating  = portfolioXirr != null && portfolioXirr > b.cagr;
       const diff     = portfolioXirr != null ? portfolioXirr - b.cagr : null;
-      const bColor   = b.cagr >= 0 ? '#4caf50' : '#e94560';
+      const bColor   = b.cagr >= 0 ? 'var(--pos)' : 'var(--neg)';
       const badge    = diff != null
-        ? `<span style="font-size:11px;padding:2px 7px;border-radius:10px;background:${beating?'#1a4a1a':'#4a1a1a'};color:${beating?'#4caf50':'#e94560'};margin-left:8px">${beating ? '▲ you beat it by ' : '▼ lagging by '}${pct(Math.abs(diff))}</span>`
+        ? `<span style="font-size:11px;padding:2px 7px;border-radius:10px;background:${beating?'var(--pos-bg)':'var(--neg-bg)'};color:${beating?'var(--pos)':'var(--neg)'};margin-left:8px">${beating ? '▲ you beat it by ' : '▼ lagging by '}${pct(Math.abs(diff))}</span>`
         : '';
 
       return `
@@ -2748,7 +2748,7 @@ async function fetchBenchmarks() {
     }).join('');
 
     const portCard = portfolioXirr != null ? `
-      <div style="background:var(--bg-hdr);border:2px solid #e94560;border-radius:8px;padding:14px 18px;min-width:180px">
+      <div style="background:var(--bg-hdr);border:2px solid var(--neg);border-radius:8px;padding:14px 18px;min-width:180px">
         <div style="color:#aaa;font-size:11px;margin-bottom:4px">Your Portfolio</div>
         <div style="font-size:22px;font-weight:700;color:${portColor}">${pct(portfolioXirr)}<span style="font-size:11px;color:#aaa;font-weight:400"> /yr</span></div>
       </div>` : '';
@@ -2821,7 +2821,7 @@ function renderReturnsTable() {
   const totDiv      = p6Rows.reduce((s, r) => s + r.divReceived, 0);
   const totVal      = p6Rows.filter(r => r.currentVal != null).reduce((s, r) => s + r.currentVal, 0);
   const totReturn   = totVal + totDiv - p6Rows.filter(r => r.currentVal != null).reduce((s, r) => s + r.totalChf, 0);
-  const totColor    = totReturn >= 0 ? '#4caf50' : '#e94560';
+  const totColor    = totReturn >= 0 ? 'var(--pos)' : 'var(--neg)';
 
   // Portfolio-level XIRR (all cash flows combined)
   let portfolioXirr = null;
@@ -2835,7 +2835,7 @@ function renderReturnsTable() {
   } catch(e) {}
 
   const xirrTotCell = portfolioXirr != null
-    ? `<span style="color:${portfolioXirr>=0?'#4caf50':'#e94560'};font-size:14px;font-weight:700">${portfolioXirr>=0?'+':''}${(portfolioXirr*100).toFixed(2)}%</span>`
+    ? `<span style="color:${portfolioXirr>=0?'var(--pos)':'var(--neg)'};font-size:14px;font-weight:700">${portfolioXirr>=0?'+':''}${(portfolioXirr*100).toFixed(2)}%</span>`
     : '—';
 
   const p6s6 = document.getElementById('p6sub6'); if (p6s6) p6s6.textContent = 'CHF ' + fmtN(totInvested);
@@ -2852,7 +2852,7 @@ function renderReturnsTable() {
   const rows = sorted.map((r, i) => {
     const fmtDate = d => d ? d.toLocaleDateString('de-CH') : '—';
     const totalReturn = (r.currentVal ?? 0) + r.divReceived - r.totalChf;
-    const retColor    = totalReturn >= 0 ? '#4caf50' : '#e94560';
+    const retColor    = totalReturn >= 0 ? 'var(--pos)' : 'var(--neg)';
     const hasVal      = r.currentVal != null;
 
     let xirrCell = '—';
@@ -2860,9 +2860,9 @@ function renderReturnsTable() {
       xirrCell = '<span style="color:#555;font-size:11px">need prices</span>';
     } else if (r.xirrVal != null) {
       const pct   = (r.xirrVal * 100).toFixed(2);
-      const color = r.xirrVal >= 0 ? '#4caf50' : '#e94560';
+      const color = r.xirrVal >= 0 ? 'var(--pos)' : 'var(--neg)';
       const bar   = Math.min(Math.abs(r.xirrVal * 100), 100);
-      const barColor = r.xirrVal >= 0 ? '#1a4a1a' : '#4a1a1a';
+      const barColor = r.xirrVal >= 0 ? 'var(--pos-bg)' : 'var(--neg-bg)';
       xirrCell = `<div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
         <div style="width:60px;height:6px;background:#1e2a45;border-radius:3px;overflow:hidden">
           <div style="width:${bar}%;height:100%;background:${color};border-radius:3px"></div>
@@ -2879,7 +2879,7 @@ function renderReturnsTable() {
       <td>${fmtDate(r.firstDate)}</td>
       <td style="text-align:right">${r.units % 1 === 0 ? r.units : fmtN(r.units)}</td>
       <td style="text-align:right;color:#aaa">CHF ${fmtN(r.totalChf)}</td>
-      <td style="text-align:right;color:#4caf50">${r.divReceived > 0 ? 'CHF ' + fmtN(r.divReceived) : '—'}</td>
+      <td style="text-align:right;color:var(--pos)">${r.divReceived > 0 ? 'CHF ' + fmtN(r.divReceived) : '—'}</td>
       <td style="text-align:right;font-weight:600">${hasVal ? 'CHF ' + fmtN(r.currentVal) : '—'}</td>
       <td style="text-align:right">${hasVal ? `<span style="color:${retColor}">${totalReturn>=0?'+':''}CHF ${fmtN(totalReturn)}</span>` : '—'}</td>
       <td style="text-align:right">${hasVal ? `<span style="color:${retColor};font-weight:700">${totalReturn>=0?'+':''}${((totalReturn/r.totalChf)*100).toFixed(2)}%</span>` : '—'}</td>
@@ -2950,7 +2950,7 @@ async function loadAssetInfo() {
     status.textContent = `Updated ${new Date().toLocaleTimeString()}`;
     renderAssetInfo(data);
   } catch(e) {
-    status.style.color = '#e94560';
+    status.style.color = 'var(--neg)';
     status.textContent = 'Error: ' + e.message;
     content.innerHTML = `<div class="error-box">Could not load asset info: ${esc(e.message)}</div>`;
   }
@@ -2980,14 +2980,14 @@ function renderAssetInfo(d) {
           ${esc(desc)}
           <div id="t7descFade" style="position:absolute;bottom:0;left:0;right:0;height:30px;background:linear-gradient(transparent,#1a1a2e)"></div>
         </div>
-        <span id="t7descMore" onclick="t7ToggleDesc()" style="font-size:11px;color:#e94560;cursor:pointer">Show more ▼</span>
+        <span id="t7descMore" onclick="t7ToggleDesc()" style="font-size:11px;color:var(--info);cursor:pointer">Show more ▼</span>
        </div>`
     : '';
 
   // ── Key ratios ──
   // Analyst recommendation badge
   const recMap = {strongbuy:'Strong Buy',buy:'Buy',hold:'Hold',underperform:'Underperform',sell:'Sell'};
-  const recColor= {strongbuy:'#4caf50',buy:'#8bc34a',hold:'#ff9800',underperform:'#ff5722',sell:'#e94560'};
+  const recColor= {strongbuy:'var(--pos)',buy:'var(--pos)',hold:'var(--warn)',underperform:'var(--neg)',sell:'var(--neg)'};
   const rec = info.recommendationKey ? info.recommendationKey.toLowerCase() : null;
   const recBadge = rec ? `<span style="background:${recColor[rec]||'#555'};color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${recMap[rec]||rec}</span>` : '—';
 
@@ -3117,7 +3117,7 @@ function renderAssetInfo(d) {
       good:'Positive & growing', caution:'Positive, flat', danger:'Negative' },
   ];
 
-  const scoreColor = { good: '#4caf50', caution: '#ff9800', danger: '#e94560' };
+  const scoreColor = { good: 'var(--pos)', caution: 'var(--warn)', danger: 'var(--neg)' };
   const scoreBg    = { good: '#0a2010', caution: '#2a1a00', danger: '#2a0a0a' };
 
   const scorecardHtml = `
@@ -3129,9 +3129,9 @@ function renderAssetInfo(d) {
             <th style="width:130px">Ratio</th>
             <th>What it measures</th>
             <th style="width:110px;text-align:center">Your Value</th>
-            <th style="width:120px;text-align:center;color:#4caf50">✓ Good</th>
+            <th style="width:120px;text-align:center;color:var(--pos)">✓ Good</th>
             <th style="width:120px;text-align:center;color:#ff9800">⚠ Caution</th>
-            <th style="width:100px;text-align:center;color:#e94560">✕ Danger</th>
+            <th style="width:100px;text-align:center;color:var(--neg)">✕ Danger</th>
           </tr>
         </thead>
         <tbody>
@@ -3144,9 +3144,9 @@ function renderAssetInfo(d) {
               <td style="font-weight:600;color:#e0e0e0">${r.label}</td>
               <td style="color:#888">${r.desc}</td>
               <td style="text-align:center;background:${bg};color:${col};font-weight:700;font-size:13px;border-radius:4px">${dispVal}</td>
-              <td style="text-align:center;color:#4caf50;font-size:11px">${r.good}</td>
+              <td style="text-align:center;color:var(--pos);font-size:11px">${r.good}</td>
               <td style="text-align:center;color:#ff9800;font-size:11px">${r.caution}</td>
-              <td style="text-align:center;color:#e94560;font-size:11px">${r.danger}</td>
+              <td style="text-align:center;color:var(--neg);font-size:11px">${r.danger}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -3186,7 +3186,7 @@ function renderETFInfo(d) {
   const fmtB = v => Math.abs(v) >= 1e9 ? (v/1e9).toFixed(2)+'B' : Math.abs(v) >= 1e6 ? (v/1e6).toFixed(2)+'M' : fmtN(v);
   const fmtP = v => v != null ? (v*100).toFixed(2)+'%' : '—';
   const fmtR = v => v != null ? ((v >= 0 ? '+' : '') + (v*100).toFixed(2) + '%') : '—';
-  const rCol = v => v == null ? '' : v >= 0 ? 'color:#4caf50' : 'color:#e94560';
+  const rCol = v => v == null ? '' : v >= 0 ? 'color:var(--pos)' : 'color:var(--neg)';
 
   // ── fund meta ──
   const inception = info.fundInceptionDate
