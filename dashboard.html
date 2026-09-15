@@ -1505,13 +1505,13 @@ function renderRows() {
   const sumHtml = Object.entries(ccySums)
     .sort((a,b) => a[0].localeCompare(b[0]))
     .map(([ccy, sum]) => {
-      const color = sum > 0 ? 'var(--pos)' : sum < 0 ? 'var(--neg)' : 'var(--text-2)';
-      return `<span style="color:${color};margin-right:10px">${ccy} ${sum>=0?'+':''}${sum.toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`;
+      const color = sum > 0 ? '#4ade80' : sum < 0 ? '#fca5a5' : 'rgba(255,255,255,0.5)';
+      return `<span style="color:${color};margin-right:10px;font-weight:600">${ccy} ${sum>=0?'+':''}${sum.toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`;
     }).join('');
   const foot = document.getElementById('t1foot');
   if (foot) foot.innerHTML = `<tr>
-    <td colspan="8" style="padding:6px 10px;color:#aaa;font-size:12px">TOTAL (${total} rows)</td>
-    <td style="text-align:right;padding:6px 10px">${sumHtml || '—'}</td>
+    <td colspan="8" style="padding:6px 10px;color:rgba(255,255,255,0.7);font-size:12px">TOTAL (${total} rows)</td>
+    <td style="text-align:right;padding:6px 10px">${sumHtml || '<span style="color:rgba(255,255,255,0.4)">—</span>'}</td>
     <td colspan="3" style="padding:6px 10px"></td>
   </tr>`;
 }
@@ -1711,8 +1711,8 @@ function renderP2Table() {
   const s7 = document.getElementById('p2sub7'); if (s7) s7.textContent = totalFees ? fmtN(totalFees) : '';
   const s8 = document.getElementById('p2sub8'); if (s8) s8.textContent = 'CHF ' + fmtN(totalInvested);
   const foot = document.getElementById('p2foot');
-  if (foot) foot.innerHTML = `<tr style="background:var(--bg-hdr);font-weight:600;border-top:2px solid #1a4a80">
-    <td colspan="9" style="padding:6px 10px;color:#aaa;font-size:11px">TOTAL — ${p2Filtered.length} purchases</td>
+  if (foot) foot.innerHTML = `<tr style="background:var(--bg-hdr);font-weight:600;border-top:2px solid rgba(255,255,255,0.2)">
+    <td colspan="9" style="padding:6px 10px;color:rgba(255,255,255,0.7);font-size:11px">TOTAL — ${p2Filtered.length} purchases</td>
   </tr>`;
 
   document.getElementById('p2body').innerHTML = p2Filtered.map(r => `
@@ -1877,8 +1877,8 @@ function renderP3Table() {
   const s7 = document.getElementById('p3sub7'); if (s7) s7.textContent = hasAnyVal ? 'CHF ' + fmtN(totVal) : '';
   const s8 = document.getElementById('p3sub8'); if (s8) s8.style.color = gainColor, s8.textContent = hasAnyVal ? (totGain>=0?'+':'')+'CHF '+fmtN(totGain) : '';
   const foot3 = document.getElementById('p3foot');
-  if (foot3) foot3.innerHTML = `<tr style="background:var(--bg-hdr);font-weight:600;border-top:2px solid #1a4a80">
-    <td colspan="10" style="padding:6px 10px;color:#aaa;font-size:11px">TOTAL — ${p3Filtered.length} assets</td>
+  if (foot3) foot3.innerHTML = `<tr style="background:var(--bg-hdr);font-weight:600;border-top:2px solid rgba(255,255,255,0.2)">
+    <td colspan="10" style="padding:6px 10px;color:rgba(255,255,255,0.7);font-size:11px">TOTAL — ${p3Filtered.length} assets</td>
   </tr>`;
   renderPortfolioChart();
 }
@@ -2092,8 +2092,8 @@ function renderP4Table() {
   const p4s4 = document.getElementById('p4sub4'); if (p4s4) p4s4.textContent = totTax ? 'CHF ' + fmtN(totTax) : '';
   const p4s5 = document.getElementById('p4sub5'); if (p4s5) p4s5.textContent = 'CHF ' + fmtN(totNet);
   const foot4 = document.getElementById('p4foot');
-  if (foot4) foot4.innerHTML = `<tr style="background:var(--bg-hdr);font-weight:600;border-top:2px solid #1a4a80">
-    <td colspan="6" style="padding:6px 10px;color:#aaa;font-size:11px">TOTAL — ${p4Filtered.length} dividend events</td>
+  if (foot4) foot4.innerHTML = `<tr style="background:var(--bg-hdr);font-weight:600;border-top:2px solid rgba(255,255,255,0.2)">
+    <td colspan="6" style="padding:6px 10px;color:rgba(255,255,255,0.7);font-size:11px">TOTAL — ${p4Filtered.length} dividend events</td>
   </tr>`;
 
   document.getElementById('p4body').innerHTML = p4Filtered.map(r => `<tr>
@@ -2149,8 +2149,8 @@ function renderDivSummary() {
   const total = rows.reduce((s, r) => s + r.total, 0);
   const p5s2 = document.getElementById('p5sub2'); if (p5s2) p5s2.textContent = 'CHF ' + fmtN(total);
   const foot5 = document.getElementById('p5foot');
-  if (foot5) foot5.innerHTML = `<tr style="background:var(--bg-hdr);font-weight:600;border-top:2px solid #1a4a80">
-    <td colspan="3" style="padding:6px 10px;color:#aaa;font-size:11px">TOTAL — ${rows.length} assets</td>
+  if (foot5) foot5.innerHTML = `<tr style="background:var(--bg-hdr);font-weight:600;border-top:2px solid rgba(255,255,255,0.2)">
+    <td colspan="3" style="padding:6px 10px;color:rgba(255,255,255,0.7);font-size:11px">TOTAL — ${rows.length} assets</td>
   </tr>`;
 
   document.getElementById('p5body').innerHTML = rows.map((r, i) => `
@@ -2837,16 +2837,16 @@ function renderReturnsTable() {
   } catch(e) {}
 
   const xirrTotCell = portfolioXirr != null
-    ? `<span style="color:${portfolioXirr>=0?'var(--pos)':'var(--neg)'};font-size:14px;font-weight:700">${portfolioXirr>=0?'+':''}${(portfolioXirr*100).toFixed(2)}%</span>`
-    : '—';
+    ? `<span style="color:${portfolioXirr>=0?'#4ade80':'#fca5a5'};font-size:14px;font-weight:700">${portfolioXirr>=0?'+':''}${(portfolioXirr*100).toFixed(2)}%</span>`
+    : '<span style="color:rgba(255,255,255,0.4)">—</span>';
 
   const p6s6 = document.getElementById('p6sub6'); if (p6s6) p6s6.textContent = 'CHF ' + fmtN(totInvested);
   const p6s7 = document.getElementById('p6sub7'); if (p6s7) p6s7.textContent = totDiv > 0 ? 'CHF ' + fmtN(totDiv) : '';
   const p6s8 = document.getElementById('p6sub8'); if (p6s8) p6s8.textContent = 'CHF ' + fmtN(totVal);
   const p6s9 = document.getElementById('p6sub9'); if (p6s9) p6s9.style.color = totColor, p6s9.textContent = (totReturn>=0?'+':'')+'CHF '+fmtN(totReturn);
   const foot6 = document.getElementById('p6foot');
-  if (foot6) foot6.innerHTML = `<tr style="background:var(--bg-hdr);font-weight:600;border-top:2px solid #1a4a80">
-    <td colspan="2" style="padding:6px 10px;color:#aaa;font-size:11px">TOTAL PORTFOLIO</td>
+  if (foot6) foot6.innerHTML = `<tr style="background:var(--bg-hdr);font-weight:600;border-top:2px solid rgba(255,255,255,0.2)">
+    <td colspan="2" style="padding:6px 10px;color:rgba(255,255,255,0.7);font-size:11px">TOTAL PORTFOLIO</td>
     <td style="text-align:right;padding:6px 10px">${xirrTotCell}</td>
     <td colspan="8" style="padding:6px 10px"></td>
   </tr>`;
