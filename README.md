@@ -306,7 +306,7 @@ FX conversion uses actual DEGIRO FX rates from the CSV (nearest date within 30 d
 
 ## UI Theme
 
-The dashboard uses a **Claude UI-inspired light theme** — light grey page background (`#f5f5f5`), white cards, near-black (`#212121`) table headers and tab bar, amber (`#f59e0b`) active-tab indicator. Semantic colours are preserved throughout:
+The dashboard uses a **Claude UI-inspired light theme** — light grey page background (`#f5f5f5`), white cards, steel-blue (`#005584`) tab bar and table headers, white active-tab underline indicator. Semantic colours are preserved throughout:
 
 | Colour | Used for |
 |--------|----------|
