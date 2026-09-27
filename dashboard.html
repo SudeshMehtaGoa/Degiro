@@ -794,6 +794,10 @@
   </div>
   <div id="p3chart" style="margin-top:20px"></div>
   <div id="p3history" style="margin-top:24px"></div>
+  <div style="display:flex;gap:20px;margin-top:24px;flex-wrap:wrap">
+    <div id="p3sector"  style="flex:1;min-width:280px"></div>
+    <div id="p3country" style="flex:1;min-width:280px"></div>
+  </div>
 </div>
 
 <!-- ── Tab 5: Dividend Summary ── -->
@@ -1881,6 +1885,8 @@ function renderP3Table() {
     <td colspan="10" style="padding:6px 10px;color:rgba(255,255,255,0.7);font-size:11px">TOTAL — ${p3Filtered.length} assets</td>
   </tr>`;
   renderPortfolioChart();
+  renderSectorChart();
+  renderCountryChart();
 }
 
 async function fetchLivePrices() {
@@ -1926,12 +1932,18 @@ async function fetchLivePrices() {
         r.priceChf   = entry.priceChf;
         r.currentVal = entry.priceChf != null ? entry.priceChf * r.units : null;
         r.gainLoss   = r.currentVal  != null ? r.currentVal - r.totalChf + (r.divReceived || 0) : null;
+        const isEtf  = entry.quoteType === 'ETF' || entry.quoteType === 'MUTUALFUND';
+        r.sector     = isEtf ? 'ETF' : (entry.sector  || null);
+        r.country    = isEtf ? 'ETF (Intl)' : (entry.country || null);
       }
     });
 
     const ok  = p3Rows.filter(r => r.priceStatus === 'ok').length;
     const err = p3Rows.filter(r => r.priceStatus === 'error').length;
     status.textContent = `Prices updated — ${ok} OK, ${err} unavailable.  Last: ${new Date().toLocaleTimeString()}`;
+    renderP3Table();
+    renderSectorChart();
+    renderCountryChart();
 
   } catch (e) {
     console.error('[Tab3] fetch error:', e);
@@ -2533,6 +2545,55 @@ function p3HistLeave() {
   ['hLine','hDot','hBox','hT0','hT1','hT2','hT3'].forEach(id => {
     const e = document.getElementById(id); if (e) e.setAttribute('display','none');
   });
+}
+
+// ── Sector & Country breakdown charts ────────────────────
+function renderBreakdownChart(containerId, title, rows, keyFn) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const funded = rows.filter(r => r.currentVal > 0);
+  if (!funded.length) { el.innerHTML = ''; return; }
+
+  const total = funded.reduce((s, r) => s + r.currentVal, 0);
+
+  // Group by key, sum currentVal
+  const groups = {};
+  for (const r of funded) {
+    const k = keyFn(r) || 'Unknown';
+    groups[k] = (groups[k] || 0) + r.currentVal;
+  }
+  const sorted = Object.entries(groups).sort((a, b) => b[1] - a[1]);
+
+  const colors = ['#005584','#29b6f6','#4caf50','#ff9800','#ce93d8','#e94560','#80deea','#ffcc80','#a5d6a7','#f48fb1','#b39ddb','#ffe082'];
+  const barH = 22, gap = 8, padT = 32, padB = 10, padL = 140, padR = 70;
+  const W = 420, H = padT + sorted.length * (barH + gap) - gap + padB;
+  const maxVal = sorted[0][1];
+
+  const bars = sorted.map(([k, v], i) => {
+    const bw = Math.round((v / maxVal) * (W - padL - padR));
+    const y  = padT + i * (barH + gap);
+    const pct = (v / total * 100).toFixed(1);
+    return `
+      <text x="${padL - 6}" y="${y + barH/2 + 4}" text-anchor="end" fill="var(--text-2)" font-size="11">${k}</text>
+      <rect x="${padL}" y="${y}" width="${bw}" height="${barH}" rx="3" fill="${colors[i % colors.length]}" opacity="0.85"/>
+      <text x="${padL + bw + 6}" y="${y + barH/2 + 4}" fill="var(--text)" font-size="11" font-weight="600">${pct}%</text>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px 18px">
+      <div style="font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:12px">${title}</div>
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;display:block;overflow:visible">
+        ${bars}
+      </svg>
+    </div>`;
+}
+
+function renderSectorChart() {
+  renderBreakdownChart('p3sector', 'Sector Breakdown', p3Rows, r => r.sector);
+}
+
+function renderCountryChart() {
+  renderBreakdownChart('p3country', 'Country Breakdown', p3Rows, r => r.country);
 }
 
 function renderXirrChart() {

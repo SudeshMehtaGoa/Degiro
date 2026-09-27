@@ -37,6 +37,8 @@ _history_cache    = None
 _history_cache_ts = 0
 HISTORY_CACHE_TTL = 3600   # 1 hour — weekly history data changes slowly
 
+_meta_cache = {}   # sector/country per ISIN — fetched once per server session
+
 # ISINs that Yahoo Finance search cannot resolve — add more here as needed
 ISIN_OVERRIDES = {
     'US02079K3059': 'GOOGL',   # Alphabet Inc Class A
@@ -178,11 +180,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                             print(f'  {isin} →{sym}: no price')
                         else:
                             p_chf = to_chf(price, ccy, fx)
+                            # Fetch sector/country once per session
+                            if isin not in _meta_cache:
+                                try:
+                                    inf = yf.Ticker(sym).info
+                                    _meta_cache[isin] = {
+                                        'sector' : inf.get('sector') or inf.get('fundFamily') or None,
+                                        'country': inf.get('country') or None,
+                                        'quoteType': inf.get('quoteType') or None,
+                                    }
+                                except Exception:
+                                    _meta_cache[isin] = {}
+                            meta = _meta_cache.get(isin, {})
                             entry = {
-                                'symbol'  : sym,
-                                'price'   : round(price, 4),
-                                'currency': ccy,
-                                'priceChf': round(p_chf, 4) if p_chf else None,
+                                'symbol'   : sym,
+                                'price'    : round(price, 4),
+                                'currency' : ccy,
+                                'priceChf' : round(p_chf, 4) if p_chf else None,
+                                'sector'   : meta.get('sector'),
+                                'country'  : meta.get('country'),
+                                'quoteType': meta.get('quoteType'),
                             }
                             print(f'  {isin} →{sym}: {price:.2f} {ccy} = CHF {p_chf:.2f}')
 
