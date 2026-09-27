@@ -183,23 +183,35 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                             # Fetch sector/country once per session
                             if isin not in _meta_cache:
                                 try:
-                                    inf = yf.Ticker(sym).info
-                                    _meta_cache[isin] = {
-                                        'sector' : inf.get('sector') or inf.get('fundFamily') or None,
-                                        'country': inf.get('country') or None,
-                                        'quoteType': inf.get('quoteType') or None,
+                                    ticker = yf.Ticker(sym)
+                                    inf = ticker.info
+                                    qt = inf.get('quoteType') or ''
+                                    m = {
+                                        'sector'    : inf.get('sector') or None,
+                                        'country'   : inf.get('country') or None,
+                                        'quoteType' : qt,
+                                        'sectorWeights': {},
                                     }
+                                    if qt in ('ETF', 'MUTUALFUND'):
+                                        try:
+                                            sw = ticker.funds_data.sector_weightings
+                                            if sw:
+                                                m['sectorWeights'] = {k: round(v * 100, 2) for k, v in sw.items() if v}
+                                        except Exception:
+                                            pass
+                                    _meta_cache[isin] = m
                                 except Exception:
                                     _meta_cache[isin] = {}
                             meta = _meta_cache.get(isin, {})
                             entry = {
-                                'symbol'   : sym,
-                                'price'    : round(price, 4),
-                                'currency' : ccy,
-                                'priceChf' : round(p_chf, 4) if p_chf else None,
-                                'sector'   : meta.get('sector'),
-                                'country'  : meta.get('country'),
-                                'quoteType': meta.get('quoteType'),
+                                'symbol'        : sym,
+                                'price'         : round(price, 4),
+                                'currency'      : ccy,
+                                'priceChf'      : round(p_chf, 4) if p_chf else None,
+                                'sector'        : meta.get('sector'),
+                                'country'       : meta.get('country'),
+                                'quoteType'     : meta.get('quoteType'),
+                                'sectorWeights' : meta.get('sectorWeights', {}),
                             }
                             print(f'  {isin} →{sym}: {price:.2f} {ccy} = CHF {p_chf:.2f}')
 

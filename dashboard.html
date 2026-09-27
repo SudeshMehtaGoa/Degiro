@@ -1932,9 +1932,10 @@ async function fetchLivePrices() {
         r.priceChf   = entry.priceChf;
         r.currentVal = entry.priceChf != null ? entry.priceChf * r.units : null;
         r.gainLoss   = r.currentVal  != null ? r.currentVal - r.totalChf + (r.divReceived || 0) : null;
-        const isEtf  = entry.quoteType === 'ETF' || entry.quoteType === 'MUTUALFUND';
-        r.sector     = isEtf ? 'ETF' : (entry.sector  || null);
-        r.country    = isEtf ? 'ETF (Intl)' : (entry.country || null);
+        const isEtf      = entry.quoteType === 'ETF' || entry.quoteType === 'MUTUALFUND';
+        r.sector         = isEtf ? 'ETF' : (entry.sector  || null);
+        r.country        = isEtf ? 'ETF (Intl)' : (entry.country || null);
+        r.sectorWeights  = isEtf ? (entry.sectorWeights || {}) : null;
       }
     });
 
@@ -2548,30 +2549,31 @@ function p3HistLeave() {
 }
 
 // ── Sector & Country breakdown charts ────────────────────
-function renderBreakdownChart(containerId, title, rows, keyFn) {
+// Maps yfinance ETF sector keys → canonical display names that match yfinance stock sector strings
+const sectorDisplayNames = {
+  technology:'Technology', financial_services:'Financial Services', healthcare:'Healthcare',
+  consumer_cyclical:'Consumer Cyclical', industrials:'Industrials',
+  communication_services:'Communication Services', consumer_defensive:'Consumer Defensive',
+  energy:'Energy', basic_materials:'Basic Materials', realestate:'Real Estate',
+  utilities:'Utilities'
+};
+
+function renderBreakdownChart(containerId, title, groups) {
   const el = document.getElementById(containerId);
   if (!el) return;
-  const funded = rows.filter(r => r.currentVal > 0);
-  if (!funded.length) { el.innerHTML = ''; return; }
+  if (!Object.keys(groups).length) { el.innerHTML = ''; return; }
 
-  const total = funded.reduce((s, r) => s + r.currentVal, 0);
-
-  // Group by key, sum currentVal
-  const groups = {};
-  for (const r of funded) {
-    const k = keyFn(r) || 'Unknown';
-    groups[k] = (groups[k] || 0) + r.currentVal;
-  }
+  const total  = Object.values(groups).reduce((s, v) => s + v, 0);
   const sorted = Object.entries(groups).sort((a, b) => b[1] - a[1]);
 
   const colors = ['#005584','#29b6f6','#4caf50','#ff9800','#ce93d8','#e94560','#80deea','#ffcc80','#a5d6a7','#f48fb1','#b39ddb','#ffe082'];
-  const barH = 22, gap = 8, padT = 32, padB = 10, padL = 140, padR = 70;
-  const W = 420, H = padT + sorted.length * (barH + gap) - gap + padB;
+  const barH = 22, gap = 8, padT = 28, padB = 10, padL = 150, padR = 60;
+  const W = 440, H = padT + sorted.length * (barH + gap) - gap + padB;
   const maxVal = sorted[0][1];
 
   const bars = sorted.map(([k, v], i) => {
-    const bw = Math.round((v / maxVal) * (W - padL - padR));
-    const y  = padT + i * (barH + gap);
+    const bw  = Math.max(2, Math.round((v / maxVal) * (W - padL - padR)));
+    const y   = padT + i * (barH + gap);
     const pct = (v / total * 100).toFixed(1);
     return `
       <text x="${padL - 6}" y="${y + barH/2 + 4}" text-anchor="end" fill="var(--text-2)" font-size="11">${k}</text>
@@ -2589,11 +2591,36 @@ function renderBreakdownChart(containerId, title, rows, keyFn) {
 }
 
 function renderSectorChart() {
-  renderBreakdownChart('p3sector', 'Sector Breakdown', p3Rows, r => r.sector);
+  const funded = p3Rows.filter(r => r.currentVal > 0);
+  if (!funded.length) return;
+  const groups = {};
+  for (const r of funded) {
+    if (r.sectorWeights && Object.keys(r.sectorWeights).length) {
+      // ETF: distribute CHF value proportionally across its sector weights
+      const weightTotal = Object.values(r.sectorWeights).reduce((s, v) => s + v, 0);
+      for (const [k, w] of Object.entries(r.sectorWeights)) {
+        const label = sectorDisplayNames[k] || k;
+        groups[label] = (groups[label] || 0) + r.currentVal * (w / weightTotal);
+      }
+    } else {
+      // Normalize stock sector name through display map
+      const raw   = r.sector || 'Unknown';
+      const label = Object.entries(sectorDisplayNames).find(([,v]) => v === raw)?.[1] || raw;
+      groups[label] = (groups[label] || 0) + r.currentVal;
+    }
+  }
+  renderBreakdownChart('p3sector', 'Sector Breakdown  (ETF holdings looked through)', groups);
 }
 
 function renderCountryChart() {
-  renderBreakdownChart('p3country', 'Country Breakdown', p3Rows, r => r.country);
+  const funded = p3Rows.filter(r => r.currentVal > 0);
+  if (!funded.length) return;
+  const groups = {};
+  for (const r of funded) {
+    const label = r.country || 'Unknown';
+    groups[label] = (groups[label] || 0) + r.currentVal;
+  }
+  renderBreakdownChart('p3country', 'Country / Domicile', groups);
 }
 
 function renderXirrChart() {
