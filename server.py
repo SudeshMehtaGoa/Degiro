@@ -37,7 +37,8 @@ _history_cache    = None
 _history_cache_ts = 0
 HISTORY_CACHE_TTL = 3600   # 1 hour — weekly history data changes slowly
 
-_meta_cache = {}   # sector/country per ISIN — fetched once per server session
+_meta_cache      = {}   # sector/country per ISIN — fetched once per server session
+_sym_country     = {}   # symbol → country — shared lookup for ETF holding look-through
 
 # ISINs that Yahoo Finance search cannot resolve — add more here as needed
 ISIN_OVERRIDES = {
@@ -194,9 +195,30 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                                     }
                                     if qt in ('ETF', 'MUTUALFUND'):
                                         try:
-                                            sw = ticker.funds_data.sector_weightings
+                                            fd = ticker.funds_data
+                                            sw = fd.sector_weightings
                                             if sw:
                                                 m['sectorWeights'] = {k: round(v * 100, 2) for k, v in sw.items() if v}
+                                            # Country look-through via top holdings
+                                            holdings = fd.top_holdings
+                                            if holdings is not None and not holdings.empty:
+                                                cw = {}
+                                                total_pct = 0.0
+                                                for hold_sym, row in holdings.iterrows():
+                                                    pct = float(row.get('Holding Percent', 0)) * 100
+                                                    if not hold_sym or pct <= 0:
+                                                        continue
+                                                    if hold_sym not in _sym_country:
+                                                        try:
+                                                            _sym_country[hold_sym] = yf.Ticker(hold_sym).info.get('country') or 'Unknown'
+                                                        except Exception:
+                                                            _sym_country[hold_sym] = 'Unknown'
+                                                    country = _sym_country[hold_sym]
+                                                    cw[country] = cw.get(country, 0) + pct
+                                                    total_pct += pct
+                                                if cw and total_pct > 0:
+                                                    # Normalise to 100% so top-holdings sample sums correctly
+                                                    m['countryWeights'] = {k: round(v / total_pct * 100, 2) for k, v in cw.items()}
                                         except Exception:
                                             pass
                                     _meta_cache[isin] = m
@@ -208,10 +230,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                                 'price'         : round(price, 4),
                                 'currency'      : ccy,
                                 'priceChf'      : round(p_chf, 4) if p_chf else None,
-                                'sector'        : meta.get('sector'),
-                                'country'       : meta.get('country'),
-                                'quoteType'     : meta.get('quoteType'),
-                                'sectorWeights' : meta.get('sectorWeights', {}),
+                                'sector'         : meta.get('sector'),
+                                'country'        : meta.get('country'),
+                                'quoteType'      : meta.get('quoteType'),
+                                'sectorWeights'  : meta.get('sectorWeights', {}),
+                                'countryWeights' : meta.get('countryWeights', {}),
                             }
                             print(f'  {isin} →{sym}: {price:.2f} {ccy} = CHF {p_chf:.2f}')
 

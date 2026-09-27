@@ -1935,7 +1935,8 @@ async function fetchLivePrices() {
         const isEtf      = entry.quoteType === 'ETF' || entry.quoteType === 'MUTUALFUND';
         r.sector         = isEtf ? 'ETF' : (entry.sector  || null);
         r.country        = isEtf ? 'ETF (Intl)' : (entry.country || null);
-        r.sectorWeights  = isEtf ? (entry.sectorWeights || {}) : null;
+        r.sectorWeights  = isEtf ? (entry.sectorWeights  || {}) : null;
+        r.countryWeights = isEtf ? (entry.countryWeights || {}) : null;
       }
     });
 
@@ -2616,11 +2617,23 @@ function renderCountryChart() {
   const funded = p3Rows.filter(r => r.currentVal > 0);
   if (!funded.length) return;
   const groups = {};
+  let hasLookThrough = false;
   for (const r of funded) {
-    const label = r.country || 'Unknown';
-    groups[label] = (groups[label] || 0) + r.currentVal;
+    if (r.countryWeights && Object.keys(r.countryWeights).length) {
+      hasLookThrough = true;
+      const weightTotal = Object.values(r.countryWeights).reduce((s, v) => s + v, 0);
+      for (const [country, w] of Object.entries(r.countryWeights)) {
+        groups[country] = (groups[country] || 0) + r.currentVal * (w / weightTotal);
+      }
+    } else {
+      const label = r.country || 'Unknown';
+      groups[label] = (groups[label] || 0) + r.currentVal;
+    }
   }
-  renderBreakdownChart('p3country', 'Country / Domicile', groups);
+  const title = hasLookThrough
+    ? 'Country Breakdown  (ETF holdings looked through)'
+    : 'Country / Domicile';
+  renderBreakdownChart('p3country', title, groups);
 }
 
 function renderXirrChart() {
